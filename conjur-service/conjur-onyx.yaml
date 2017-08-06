@@ -1,0 +1,27 @@
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: conjur-onyx
+  labels:
+    app: conjur-onyx
+spec:
+  serviceName: conjur-onyx
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: unset	# used by conjur-service selector to point to master
+        cluster-id: dev
+    spec:
+      containers:
+      - name: conjur-onyx
+        image: conjur-appliance:local
+        ports:
+        - containerPort: 443
+          name: https
+        - containerPort: 636
+          name: ldaps
+        - containerPort: 5432
+          name: pg-repl1
+        - containerPort: 5433
