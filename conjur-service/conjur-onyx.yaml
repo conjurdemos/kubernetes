@@ -12,7 +12,6 @@ spec:
     metadata:
       labels:
         app: unset	# used by conjur-service selector to point to master
-        cluster-id: dev
     spec:
       containers:
       - name: conjur-onyx
@@ -23,5 +22,6 @@ spec:
         - containerPort: 636
           name: ldaps
         - containerPort: 5432
-          name: pg-repl1
+          name: main
         - containerPort: 5433
+          name: audit

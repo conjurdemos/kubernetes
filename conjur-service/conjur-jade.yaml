@@ -12,7 +12,6 @@ spec:
     metadata:
       labels:
         app: unset		# used by conjur-service selector
-        cluster-id: dev
     spec:
       containers:
       - name: conjur-jade
@@ -23,6 +22,6 @@ spec:
         - containerPort: 636
           name: ldaps
         - containerPort: 5432
-          name: pg-sql
+          name: main
         - containerPort: 5433
-          name: pg-repl
+          name: audit
