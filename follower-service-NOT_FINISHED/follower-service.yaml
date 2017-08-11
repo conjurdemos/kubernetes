@@ -1,0 +1,59 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: follower-service
+  labels:
+    app: follower-service
+spec:
+  ports:
+  - port: 80
+    name: http
+  - port: 443
+    name: https
+  - port: 5432
+    name: pg-repl1
+  - port: 5433
+    name: pg-repl2
+  selector:
+    app: conjur-follower
+    cluster-id: dev
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: follower-service
+  labels:
+    app: follower-service
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: follower-service
+    spec:
+      volumes:
+      - name: shared-data
+        emptyDir: {}
+      containers:
+      - name: conjur-follower
+        image: conjur-appliance:local
+        ports:
+        - containerPort: 443
+          name: https
+        - containerPort: 5432
+          name: pg-repl1
+        - containerPort: 5433
+          name: pg-repl2
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "while [ ! -f /host-mount/follower-seed.tar ]; do sleep 5; done; cp /host-mount/follower-seed.tar /tmp; evoke unpack seed /tmp/follower-seed.tar"]
+#              command: ["/bin/sh", "-c", "evoke configure follower"]
+        volumeMounts:
+        - mountPath: /host-mount
+          name: launch-dir
+      volumes:
+      - name: launch-dir
+        hostPath:
+          path: /Users/josephhunt/Conjur/scalability-k8s

@@ -1,3 +1,9 @@
+#!/bin/bash -x
+conjur init -h conjur-service -f conjurrc
+export CONJURRC=$(pwd)/conjurrc
+printf "Login with admin/Cyberark1...\n"
+conjur authn login 
+conjur bootstrap
 conjur policy load --as-group=security_admin users-policy.yml | tee up-out.json
 bob_pwd=$(cat up-out.json | jq -r '."dev:user:bob"')
 carol_pwd=$(cat up-out.json | jq -r '."dev:user:carol"')
@@ -9,9 +15,12 @@ conjur authn login -u bob -p $bob_pwd
 echo "Create new password for Bob..."
 conjur user update_password
 # setup weave scope for visualization
-sudo curl -L git.io/scope -o /usr/local/bin/scope
-sudo chmod a+x /usr/local/bin/scope
-scope launch
+weave_image=$(docker images | awk '/weave/ {print $1}')
+if [[ "$weave_image" == "" ]]; then
+	sudo curl -L git.io/scope -o /usr/local/bin/scope
+	sudo chmod a+x /usr/local/bin/scope
+	scope launch
+fi
 cd build
 ./build.sh
 cd ..

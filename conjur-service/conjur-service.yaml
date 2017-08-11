@@ -11,6 +11,10 @@ spec:
     name: https
   - port: 636
     name: ldaps
+  - port: 5432
+    name: pg-follower
+  - port: 5433
+    name: pg-standby
   selector:
     app: conjur-master		# initial conjur-master is conjur-master-set-0-0
     cluster-id: dev

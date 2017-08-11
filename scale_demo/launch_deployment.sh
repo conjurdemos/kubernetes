@@ -41,7 +41,8 @@ main() {
 	var_id=$URLIFIED
 	printf "\tVariable ID: %s\n" $var_id
 	printf "\tSleep time: %s\n" $sleep_time
-	read -n 1 -s -p "Press any key to continue"
+	echo ""
+	read -n 1 -s -p "Press any key to continue..."
 
 	# use HF token to register host, get API key
 	HOST_API_KEY=$(curl -s \
@@ -58,13 +59,10 @@ main() {
 		echo "Redeemed HF token for API key" $HOST_API_KEY 
 	fi
 
-			# get IP address of conjur service 
-			# parsing output of "describe" may not be reliable
-	CLUSTER_IP=$(kubectl describe svc conjur-service | awk '/IP:/ { print $2; exit}')
         $(kubectl delete configmap $deployment_name) >> /dev/null     # delete configmap if it exists
         # write out endpoint, access token, variable name and sleep time
         kubectl create configmap $deployment_name \
-                --from-literal=conjur-service-url=https://$CLUSTER_IP/api \
+                --from-literal=conjur-service-url=https://conjur-service/api \
                 --from-literal=deployment-name=$deployment_name \
                 --from-literal=api-key=$HOST_API_KEY \
                 --from-literal=var-name=$var_id \

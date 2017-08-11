@@ -1,0 +1,56 @@
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: webapp1-deployment
+spec:
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: webapp1
+    spec:
+      volumes:
+      - name: shared-data
+        emptyDir: {}
+      containers:
+      - name: webapp1
+        image: cdemo/curl:local
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+        env:
+        - name: ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: webapp1
+              key: conjur-service-url
+        - name: DEPLOYMENT_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: webapp1
+              key: deployment-name
+        - name: VAR_ID
+          valueFrom:
+            configMapKeyRef:
+              name: webapp1
+              key: var-name
+        - name: SLEEP_TIME
+          valueFrom:
+            configMapKeyRef:
+              name: webapp1
+              key: sleep-time
+      initContainers:
+      - name: init-democ
+        image: cdemo/curl:local
+        command: ["/bin/sh", "-c", "echo $API_KEY > /shared/api_key"]
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+        env:
+        - name: API_KEY
+          valueFrom:
+            configMapKeyRef:
+              name: webapp1
+              key: api-key
+

@@ -1,9 +1,11 @@
-#!/bin/bash -x
+#!/bin/bash 
 # Assumptions:
 # - docker, minikube and kubectl are already installed
 
 declare ROOT_KEY=Cyberark1
-declare CONJUR_CLUSTER_NAME=dev
+declare CONJUR_CLUSTER_ACCT=dev
+declare CONJUR_MASTER_DNS_NAME=conjur-service
+declare CONJUR_APPLIANCE_TAR=~/conjur-install-images/conjur-appliance-4.9.4.0.tar
 
 # sudo not required for mac, but is for linux
 DOCKER="docker"
@@ -16,8 +18,8 @@ fi
 # MAIN - takes no command line arguments
 
 main() {
-#	startup_env
-#	load_tag_conjur_image
+	startup_env
+	load_tag_conjur_image
 	startup_conjur_service
 	configure_conjur_cluster
 
@@ -42,9 +44,8 @@ startup_env() {
 ##############################
 # STEP 2 - load appliance and tag as conjur-appliance:local
 load_tag_conjur_image() {
-	CONJUR_APPLIANCE_TAR=~/conjur-install-images/conjur-appliance-4.9.4.0.tar
 	$DOCKER load -i $CONJUR_APPLIANCE_TAR
-	CONTAINER_NAME=$($DOCKER images | awk '/registry.tld/ { print $1":"$2}')
+	CONTAINER_NAME=$($DOCKER images | awk '/registry.tld/ { print $1":"$2; exit}')
 
 				# use 'local' tag to prevent kubectl from trying to pull latest
 	$DOCKER tag $CONTAINER_NAME conjur-appliance:local
@@ -79,32 +80,33 @@ configure_conjur_cluster() {
 	local MASTER_POD_NAME=$MASTER_SET-0
 	local MASTER_POD_IP=$(kubectl describe pod $MASTER_POD_NAME | awk '/IP:/ { print $2 }')
 				# configure Conjur master server using evoke
-	kubectl exec -it $MASTER_POD_NAME -- evoke configure master -h conjur-service -p $ROOT_KEY $CONJUR_CLUSTER_NAME
+	kubectl exec -it $MASTER_POD_NAME -- evoke configure master -h $CONJUR_MASTER_DNS_NAME -p $ROOT_KEY $CONJUR_CLUSTER_ACCT
 
-        			# prepare seed files
+        			# prepare seed files for standbys and followers
         kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke seed standby > /tmp/standby-seed.tar"
 	kubectl cp $MASTER_POD_NAME:/tmp/standby-seed.tar ./standby-seed.tar
+        kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke seed follower $CONJUR_MASTER_DNS_NAME > /tmp/follower-seed.tar"
+	kubectl cp $MASTER_POD_NAME:/tmp/follower-seed.tar ./follower-seed.tar
+
 
         			# get name of statefulSet that is labeled sync standby
         local SYNC_STANDBY_SET=$(kubectl get statefulSet \
                 -l app=sync-conjur-standby --no-headers \
                 | awk '{ print $1 }' )
 	local SYNC_STANDBY_POD_NAME=$SYNC_STANDBY_SET-0
-
         			# copy seed file to sync standby, unpack and configure
 	kubectl cp ./standby-seed.tar $SYNC_STANDBY_POD_NAME:/tmp/standby-seed.tar
 	kubectl exec -it $SYNC_STANDBY_POD_NAME -- bash -c "evoke unpack seed /tmp/standby-seed.tar"
 	kubectl exec -it $SYNC_STANDBY_POD_NAME -- evoke configure standby -i $MASTER_POD_IP
-
 				# force sync replication to designated sync standby
         kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke replication sync --force"
+
 
         			# get name of statefulSet that is labeled async standby
         local ASYNC_STANDBY_SET=$(kubectl get statefulSet \
                 -l app=async-conjur-standby --no-headers \
                 | awk '{ print $1 }' )
 	local ASYNC_STANDBY_POD_NAME=$ASYNC_STANDBY_SET-0
-
         			# copy seed file to async standby, unpack and configure
 	kubectl cp ./standby-seed.tar $ASYNC_STANDBY_POD_NAME:/tmp/standby-seed.tar
 	kubectl exec -it $ASYNC_STANDBY_POD_NAME -- bash -c "evoke unpack seed /tmp/standby-seed.tar"

@@ -2,8 +2,8 @@
 # Note: if you've initialized the Conjur CLI, both of these values can be found in your ~/.conjurrc file
 
 # set this to point to your Conjur master URL and cert file
-declare CONJUR_APPLIANCE_URL=
-declare CONJUR_CERT_FILE=
+declare CONJUR_APPLIANCE_URL=https://conjur-service/api
+declare CONJUR_CERT_FILE=./conjur-dev.pem
 
 # if you have not installed the Conjur CLI, you can generate a certificate
 # using evoke from within the conjur master container, then copy it into the current

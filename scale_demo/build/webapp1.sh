@@ -5,15 +5,20 @@ printf "\n\n\nExecuting within the container...\n\n"
 # environment variables from configmap
 # ENDPOINT - environment variable
 # DEPLOYMENT_NAME - environment variable
-# API_KEY - environment variable
 # VAR_ID - environment variable name to fetch
 # SLEEP_TIME - environment variable name to fetch
 
 declare CONT_NAME=$(hostname)
 declare LOGFILE=cc.log
+declare INPUT_FILE=/shared/api_key
 
 # for logfile to see whats going on
 touch $LOGFILE
+
+# get API_KEY cached in file in shared volume
+# ket is put there by the init container for the pod
+# which pulls it from the configMap named webapp1
+read API_KEY < $INPUT_FILE
 
 echo "Endpoint is:" $ENDPOINT >> $LOGFILE
 

@@ -16,39 +16,32 @@ declare DEBUG_BREAKPT=""
 #declare DEBUG_BREAKPT="read -n 1 -s -p 'Press any key to continue'"
 
 ################  MAIN   ################
-# Deletes deployement and all tokens for host factory
+# Deletes all tokens for host factory
 #
-# $1 - deployment name - assumes <deployment_name>.yaml file exists
-# $2 - host factory name 
+# $1 - host factory name 
 
 main() {
         if [[ $# -ne 1 ]] ; then
-                printf "\n\tUsage: %s <deployment-name> \n\n" $0
+                printf "\n\tUsage: %s <host-factory-name>\n\n" $0
                 exit 1
         fi
-        local deployment_name=$1
-        local HOST_FACTORY_NAME=$2
+        local HOST_FACTORY_NAME=$1; shift
 
 	user_authn
 	
-	printf "\nDeleting %s deployment..." $deployment_name
-	kubectl delete -f $deployment_name.yaml
+        urlify $HOST_FACTORY_NAME
+        HOST_FACTORY_NAME=$URLIFIED
 
-        if [[ "$HOST_FACTORY_NAME" -ne "" ]] ; then
-          urlify $HOST_FACTORY_NAME
-          HOST_FACTORY_NAME=$URLIFIED
+	hf_tokens_get $HOST_FACTORY_NAME  # sets HF_TOKENS
+        printf "\nHost factory %s:\n" $HOST_FACTORY_NAME
+	echo $HF_TOKENS | jq -r '.[]'
+	TOKENS=$(echo $HF_TOKENS | jq -r ' .[] | .token')
 
-	     hf_tokens_get $HOST_FACTORY_NAME  # sets HF_TOKENS
-             printf "\nHost factory %s:\n" $HOST_FACTORY_NAME
-		echo $HF_TOKENS | jq -r '.[]'
-		TOKENS=$(echo $HF_TOKENS | jq -r ' .[] | .token')
-
-		for tkn in $TOKENS; do
-			printf "Revoking token: %s\n" $tkn
-			hf_token_revoke $tkn
-		done
-	fi
-
+	for tkn in $TOKENS; do
+		printf "Revoking token: %s\n" $tkn
+		hf_token_revoke $tkn
+	done
+	printf "\nAll tokens revoked.\n"
 }
  
 ##################

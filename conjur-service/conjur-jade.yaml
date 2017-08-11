@@ -23,5 +23,6 @@ spec:
         - containerPort: 636
           name: ldaps
         - containerPort: 5432
-          name: pg-repl1
+          name: pg-sql
         - containerPort: 5433
+          name: pg-repl

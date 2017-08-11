@@ -1,6 +1,6 @@
-#!/bin/bash -x
+#!/bin/bash 
 # Assumptions:
-# - Conjur service is already configured and running in a pod
+# - conjur-service is already configured and running
 
 ##############################
 ##############################
@@ -19,7 +19,7 @@ main() {
 ##############################
 # build client image
 build_conjur_client() {
-	pushd build
+	pushd cli_image_build
 	./build.sh
 	popd
 }
@@ -28,7 +28,7 @@ build_conjur_client() {
 # startup client as defined in yaml file
 startup_conjur_client() {
 				# start up conjur-client container
-	kubectl create -f conjur-client.yaml
+	kubectl create -f cli-conjur.yaml
 	sleep 5
 }
 
@@ -37,14 +37,16 @@ startup_conjur_client() {
 configure_conjur_client() {
 				# get conjur service IP
         CLUSTER_IP=$(kubectl describe svc conjur-service | awk '/IP:/ { print $2; exit}')
-	kubectl exec conjur-client -- /bin/bash -c "printf \"%s\t%s\n\" $CLUSTER_IP conjur-service >> /etc/hosts"
-	kubectl exec conjur-client -- /bin/bash -c "curl -k https://conjur-service/health"
+	kubectl exec conjur-cli -- /bin/bash -c "printf \"%s\t%s\n\" $CLUSTER_IP conjur-service >> /etc/hosts"
+	kubectl exec conjur-cli -- /bin/bash -c "curl -k https://conjur-service/health"
 }
 ##############################
 # initialize client cli
 initialize_conjur_client() {
-	printf "Run conjur init manually now...\n"
-	kubectl exec -it conjur-client -- /bin/bash
+	kubectl exec -it conjur-cli conjur init -h conjur-service -a dev
+	printf "\nYou are now in the Conjur CLI container.\n"
+	printf "The Conjur CLI, kubectl, docker, curl and jq are all here.\n\n"
+	kubectl exec -it conjur-cli -- /bin/bash
 }
 
 main $@
