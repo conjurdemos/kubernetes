@@ -1,0 +1,15 @@
+
+
+* https://github.com/conjurdemos/scalability-k8s/blob/master/1_startup-conjur-service.sh#L101
+
+This won't actually designate this machine as "sync".
+It just turns sync replication on.
+
+* kubectl exec conjur-cli -- /bin/bash -c "printf \"%s\t%s\n\" $CLUSTER_IP conjur-service >> /etc/hosts"
+
+You should not have to do this. Kubernetes will resolve the DNS name.
+
+* Add a readiness probe that checks that the machine is healthy enough for its role:
+  blank, healthy, or standby-healthy
+
+
