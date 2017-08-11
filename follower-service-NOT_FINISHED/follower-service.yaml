@@ -56,4 +56,4 @@ spec:
       volumes:
       - name: launch-dir
         hostPath:
-          path: /Users/josephhunt/Conjur/scalability-k8s
+          path: <your-path-to-root-from-here>/scalability-k8s
