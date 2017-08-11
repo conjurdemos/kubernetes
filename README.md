@@ -5,8 +5,6 @@ Goal: The scalability-demo implemented in Kubernetes, with a full Conjur cluster
 Scenario: Spin up a bunch of minimal containers, each of which fetches a secret every few seconds in a continuous loop. Change the secret, deny access, failover to standby and watch effects.
 
 Prerequisites:
-- virtual box
-- docker
 - minikube
 - kubectl
 
