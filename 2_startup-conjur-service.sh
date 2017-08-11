@@ -5,7 +5,6 @@
 declare ROOT_KEY=Cyberark1
 declare CONJUR_CLUSTER_ACCT=dev
 declare CONJUR_MASTER_DNS_NAME=conjur-service
-declare CONJUR_APPLIANCE_TAR=~/conjur-install-images/conjur-appliance-4.9.4.0.tar
 
 # sudo not required for mac, but is for linux
 DOCKER="docker"
@@ -19,7 +18,6 @@ fi
 
 main() {
 	startup_env
-	load_tag_conjur_image
 	startup_conjur_service
 	configure_conjur_cluster
 
@@ -36,23 +34,12 @@ main() {
 ##############################
 # STEP 1 - startup environment
 startup_env() {
-	minikube start
-				# use the minikube docker environment
+	# use the minikube docker environment
 	eval $(minikube docker-env)
 }
 
 ##############################
-# STEP 2 - load appliance and tag as conjur-appliance:local
-load_tag_conjur_image() {
-	$DOCKER load -i $CONJUR_APPLIANCE_TAR
-	CONTAINER_NAME=$($DOCKER images | awk '/registry.tld/ { print $1":"$2; exit}')
-
-				# use 'local' tag to prevent kubectl from trying to pull latest
-	$DOCKER tag $CONTAINER_NAME conjur-appliance:local
-}
-
-##############################
-# STEP 3 - start service and label pods w/ roles
+# STEP 2 - start service and label pods w/ roles
 startup_conjur_service() {
 				# start up conjur services from directory of yaml
 	kubectl create -f conjur-service/
@@ -70,7 +57,7 @@ startup_conjur_service() {
 }
 
 ##############################
-# STEP 4 - configure cluster based on role labels
+# STEP 3 - configure cluster based on role labels
 # Input: none
 configure_conjur_cluster() {
 				# get name of stateful set that is labeled conjur-master
