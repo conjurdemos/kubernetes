@@ -33,21 +33,23 @@ scale_demo (directory) - scripts and support for running the scalability demo
 - users-policy.yml - defines demo users
 - webapp1-policy.yml - defines webapp1 security schema
 - webapp1.yaml - k8s deployment description
-- EDIT.ME - sourced by scripts, replacement for .conjurrc
-- load_policy.sh - loads a supplied policy file into conjur
+- EDIT.ME - sourced by scripts in lieu of .conjurrc for RESTful apps
+- load_policy.sh - loads a policy file into conjur
 - setup_deployment.sh - sets up a deployment per input parameters
-- cleanup_host_factory.sh - revokes all tokens for a given host factory
 - launch_deployment.sh - launches a deployment setup by setup_deployment.sh
-- build (directory):
+- cleanup_host_factory.sh - revokes all tokens for a given host factory
+- build (directory) - for building the deployment container image
   - Dockerfile - build description for demo container
   - build.sh - script that generates build
   - webapp1.sh - "application" that runs in each demo container in deployment
 
 - cli_client (directory) - experimental, for seeing how much cluster management can be done from inside the cluster.
-  - cli-conjur.yaml
-  - cli-shell.sh
-  - cli-startup.sh
-  - cli_image_build
+  - cli-conjur.yaml - k8s yaml descriptor for pod
+  - cli-shell.sh - exec into container (saves typing)
+  - cli-startup.sh - builds images, launches pod, execs into it for initialization
+  - cli_image_build (directory)
+    - Dockerfile - describes the build
+    - build.sh - runs the build
   
 - follower-service-NOT_FINISHED (directory)
   - follower-service.yaml - deployment description for followers. currently stops before calling "evoke configure follower" due to issues.
