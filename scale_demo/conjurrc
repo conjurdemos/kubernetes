@@ -1,0 +1,5 @@
+---
+account: dev
+plugins: []
+appliance_url: https://conjur-service/api
+cert_file: "/Users/josephhunt/Conjur/scalability-k8s/scale_demo/conjur-dev.pem"

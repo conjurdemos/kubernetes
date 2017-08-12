@@ -32,9 +32,6 @@ spec:
       labels:
         app: follower-service
     spec:
-      volumes:
-      - name: shared-data
-        emptyDir: {}
       containers:
       - name: conjur-follower
         image: conjur-appliance:local
@@ -48,12 +45,28 @@ spec:
         lifecycle:
           postStart:
             exec:
-              command: ["/bin/sh", "-c", "while [ ! -f /host-mount/follower-seed.tar ]; do sleep 5; done; cp /host-mount/follower-seed.tar /tmp; evoke unpack seed /tmp/follower-seed.tar"]
+              command: ["/bin/sh", "-c", "cp /shared/follower-seed.tar /tmp; evoke unpack seed /tmp/follower-seed.tar"]
 #              command: ["/bin/sh", "-c", "evoke configure follower"]
         volumeMounts:
         - mountPath: /host-mount
           name: launch-dir
       volumes:
+      - name: shared-data
+        emptyDir: {}
       - name: launch-dir
         hostPath:
-          path: <your-path-to-root-from-here>/scalability-k8s
+          path: <path-to-root-from-here-on-your-machine>/scalability-k8s
+
+# it seems like a bad idea to have a mount a host volume in every container,
+# esp. in a multi-node environment. So the init container mounts the host volume
+# and copies the seed file into a shared volume. Unpacking a seed file destroys
+# the tarfile so every follower needs its own.
+      initContainers:
+      - name: init-followers
+        image: cdemo/curl:local
+        command: ["/bin/sh", "-c", "while [ ! -f /host-mount/follower-seed.tar ]; do sleep 5; done; cp /host-mount/follower-seed.tar /shared"]
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+        - name: launch-dir
+          mountPath: /host-mount
