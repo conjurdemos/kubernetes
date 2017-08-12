@@ -19,7 +19,6 @@ Cluster management:
   - conjur-jade.yaml - one of three statefulSets for master, standby, standby
   - conjur-quartz.yaml - one of three statefulSets for master, standby, standby
   - conjur-onyx.yaml - one of three statefulSets for master, standby, standby
-  - conjur.json - configuration file to reduce resource demands of each container
 
 scale_demo (directory) - scripts and support for running the scalability demo
 - 0_demo_init.sh - creates users, updates passwords, loads weave scope, etc.
