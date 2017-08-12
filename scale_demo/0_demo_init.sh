@@ -1,9 +1,8 @@
 #!/bin/bash -x
-conjur init -h conjur-service -f conjurrc
+conjur init -h conjur-master -f conjurrc
 export CONJURRC=$(pwd)/conjurrc
-printf "Login with admin/Cyberark1...\n"
-conjur authn login 
-conjur bootstrap
+printf "Login with password 'Cyberark1'...\n"
+conjur authn login admin
 conjur policy load --as-group=security_admin users-policy.yml | tee up-out.json
 bob_pwd=$(cat up-out.json | jq -r '."dev:user:bob"')
 carol_pwd=$(cat up-out.json | jq -r '."dev:user:carol"')

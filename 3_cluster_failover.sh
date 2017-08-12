@@ -70,9 +70,9 @@ main() {
 	done
 
 	# copy seed file, unpack and configure
-	kubectl cp ./standby-seed.tar $NEW_SYNC_STANDBY_POD:/tmp/standby-seed.tar
+	kubectl cp tmp/standby-seed.tar $NEW_SYNC_STANDBY_POD:/tmp/standby-seed.tar
 	kubectl exec -it $NEW_SYNC_STANDBY_POD -- bash -c "evoke unpack seed /tmp/standby-seed.tar"
-	kubectl exec -it $NEW_SYNC_STANDBY_POD -- evoke configure standby -i $NEW_MASTER_POD_IP
+	kubectl exec -it $NEW_SYNC_STANDBY_POD -- evoke configure standby -j /etc/conjur.json -i $NEW_MASTER_POD_IP
 
 	# update labels
 	kubectl label --overwrite statefulSet $NEW_SYNC_STANDBY_SET app=sync-conjur-standby

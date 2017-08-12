@@ -24,8 +24,8 @@ main() {
 	CLUSTER_IP=$(kubectl describe svc conjur-master | awk '/IP:/ { print $2; exit}')
 	EXTERNAL_IP=$(kubectl describe svc conjur-master | awk '/External IPs:/ { print $3; exit}')
 
-	printf "\n\nIn conjur-client container, add:\n\t%s\tconjur-service\n to /etc/hosts.\n\n" $CLUSTER_IP
-	printf "\n\nOutside the cluster, add:\n\t%s\tconjur-service\n to /etc/hosts.\n\n" $EXTERNAL_IP 
+	printf "\n\nIn conjur-client container, add:\n\t%s\tconjur-master\n to /etc/hosts.\n\n" $CLUSTER_IP
+	printf "\n\nOutside the cluster, add:\n\t%s\tconjur-master\n to /etc/hosts.\n\n" $EXTERNAL_IP 
 }
 
 ##############################
@@ -60,6 +60,8 @@ startup_conjur_service() {
 # STEP 3 - configure cluster based on role labels
 # Input: none
 configure_conjur_cluster() {
+	mkdir -p tmp
+
 	# get name of stateful set that is labeled conjur-master
 	local MASTER_SET=$(kubectl get statefulSet \
 				-l app=conjur-master --no-headers \
@@ -68,14 +70,13 @@ configure_conjur_cluster() {
 	local MASTER_POD_IP=$(kubectl describe pod $MASTER_POD_NAME | awk '/IP:/ { print $2 }')
 
 	# configure Conjur master server using evoke
-	kubectl cp conjur.json $MASTER_POD_NAME:/etc/conjur.json
 	kubectl exec -it $MASTER_POD_NAME -- evoke configure master -j /etc/conjur.json -h $CONJUR_MASTER_DNS_NAME -p $ROOT_KEY $CONJUR_CLUSTER_ACCT
 
 	# prepare seed files for standbys and followers
 	kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke seed standby > /tmp/standby-seed.tar"
-	kubectl cp $MASTER_POD_NAME:/tmp/standby-seed.tar ./standby-seed.tar
+	kubectl cp $MASTER_POD_NAME:/tmp/standby-seed.tar tmp/standby-seed.tar
 	kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke seed follower $CONJUR_MASTER_DNS_NAME > /tmp/follower-seed.tar"
-	kubectl cp $MASTER_POD_NAME:/tmp/follower-seed.tar ./follower-seed.tar
+	kubectl cp $MASTER_POD_NAME:/tmp/follower-seed.tar tmp/follower-seed.tar
 
 
 	# get name of statefulSet that is labeled sync standby
@@ -84,8 +85,7 @@ configure_conjur_cluster() {
 				| awk '{ print $1 }' )
 	local SYNC_STANDBY_POD_NAME=$SYNC_STANDBY_SET-0
 	# copy seed file to sync standby, unpack and configure
-	kubectl cp conjur.json $SYNC_STANDBY_POD_NAME:/etc/conjur.json
-	kubectl cp ./standby-seed.tar $SYNC_STANDBY_POD_NAME:/tmp/standby-seed.tar
+	kubectl cp tmp/standby-seed.tar $SYNC_STANDBY_POD_NAME:/tmp/standby-seed.tar
 	kubectl exec -it $SYNC_STANDBY_POD_NAME -- bash -c "evoke unpack seed /tmp/standby-seed.tar"
 	kubectl exec -it $SYNC_STANDBY_POD_NAME -- evoke configure standby -j /etc/conjur.json -i $MASTER_POD_IP
 	# enable synchronous replication
@@ -97,8 +97,7 @@ configure_conjur_cluster() {
 				| awk '{ print $1 }' )
 	local ASYNC_STANDBY_POD_NAME=$ASYNC_STANDBY_SET-0
 	# copy seed file to async standby, unpack and configure
-	kubectl cp conjur.json $ASYNC_STANDBY_POD_NAME:/etc/conjur.json
-	kubectl cp ./standby-seed.tar $ASYNC_STANDBY_POD_NAME:/tmp/standby-seed.tar
+	kubectl cp tmp/standby-seed.tar $ASYNC_STANDBY_POD_NAME:/tmp/standby-seed.tar
 	kubectl exec -it $ASYNC_STANDBY_POD_NAME -- bash -c "evoke unpack seed /tmp/standby-seed.tar"
 	kubectl exec -it $ASYNC_STANDBY_POD_NAME -- evoke configure standby -j /etc/conjur.json -i $MASTER_POD_IP
 }

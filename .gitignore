@@ -1,4 +1,5 @@
 conjur_server_build/*.deb
-*-seed.tar
+scale_demo/conjur-dev.pem
+scale_demo/conjurrc
 tmp
 

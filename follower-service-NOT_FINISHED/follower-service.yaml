@@ -39,9 +39,9 @@ spec:
         - containerPort: 443
           name: https
         - containerPort: 5432
-          name: pg-repl1
+          name: pg-main
         - containerPort: 5433
-          name: pg-repl2
+          name: pg-audit
         lifecycle:
           postStart:
             exec:
