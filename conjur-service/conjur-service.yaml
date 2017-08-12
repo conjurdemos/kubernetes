@@ -16,6 +16,6 @@ spec:
   - port: 5433
     name: audit
   selector:
-    app: conjur-master		# initial conjur-master is conjur-master-set-0-0
+    app: conjur-master
   externalIPs: 
-    - 192.168.99.100		# the IP address of the minikube vbox
+    - 192.168.99.100 # you can get this value w/ "minikube ip" command
