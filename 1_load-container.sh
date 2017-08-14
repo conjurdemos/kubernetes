@@ -7,7 +7,10 @@
 # 
 # $ eval $(minikube docker-env)
 # $ docker pull registry2.itci.conjur.net/conjur-appliance:4.9-stable
-# $ docker tag registry2.itci.conjur.net/conjur-appliance:4.9-stable conjur-appliance:local
+# $ docker tag registry2.itci.conjur.net/conjur-appliance:4.9-stable conjur-appliance:4.9-stable
+# $ pushd ./conjur_server_build
+# $ ./build.sh
+# $ popd
 
 declare CONJUR_APPLIANCE_TAR=~/conjur-install-images/conjur-appliance-4.9.4.0.tar
 
