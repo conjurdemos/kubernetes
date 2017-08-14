@@ -1,0 +1,9 @@
+FROM haproxy:1.7
+
+RUN apt-get update 
+RUN apt-get install -y bash
+RUN apt-get install -y curl
+COPY conjur-health-check.sh /root/conjur-health-check.sh
+RUN chmod +x /root/conjur-health-check.sh
+
+COPY haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg

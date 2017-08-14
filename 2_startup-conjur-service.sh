@@ -4,7 +4,8 @@
 
 declare ROOT_KEY=Cyberark1
 declare CONJUR_CLUSTER_ACCT=dev
-declare CONJUR_MASTER_DNS_NAME=conjur-service
+declare CONJUR_MASTER_DNS_NAME=conjur-master
+declare MASTER_POD_NAME=conjur-master-headless-0
 
 # sudo not required for mac, but is for linux
 DOCKER="docker"
@@ -19,13 +20,7 @@ fi
 main() {
 	startup_env
 	startup_conjur_service
-	configure_conjur_cluster
-
-	CLUSTER_IP=$(kubectl describe svc conjur-service | awk '/IP:/ { print $2; exit}')
-	EXTERNAL_IP=$(kubectl describe svc conjur-service | awk '/External IPs:/ { print $3; exit}')
-
-	printf "\n\nIn conjur-client container, add:\n\t%s\tconjur-service\n to /etc/hosts.\n\n" $CLUSTER_IP 
-	printf "\n\nOutside the cluster, add:\n\t%s\tconjur-service\n to /etc/hosts.\n\n" $EXTERNAL_IP 
+#	configure_conjur_cluster
 }
 
 ##############################
@@ -41,19 +36,22 @@ startup_env() {
 ##############################
 # STEP 2 - start service and label pods w/ roles
 startup_conjur_service() {
-				# start up conjur services from directory of yaml
-	kubectl create -f conjur-service/
+				# delete configmap if it exists
+        kubectl delete configmap conjur-master-config >> /dev/null
+
+        			# write out cluster config parameters
+        kubectl create configmap conjur-master-config \
+                --from-literal=master-pod-name=$MASTER_POD_NAME \
+                --from-literal=conjur-master-dns-name=$CONJUR_MASTER_DNS_NAME \
+                --from-literal=root-key=$ROOT_KEY \
+                --from-literal=conjur-cluster-acct=$CONJUR_CLUSTER_ACCT
+
+				# start up conjur services from yaml
+	kubectl create -f ./etc/conjur-master-headless.yaml
+				# start up load balancer
+	kubectl create -f ./etc/haproxy-headless.yaml
 
 				# give containers time to get running
-	sleep 5
-				# tag with initial roles in cluster
-	kubectl label --overwrite pods conjur-onyx-0 app=conjur-master
-	kubectl label --overwrite statefulSet conjur-onyx app=conjur-master
-	kubectl label --overwrite pods conjur-jade-0 app=sync-conjur-standby
-	kubectl label --overwrite statefulSet conjur-jade app=sync-conjur-standby
-	kubectl label --overwrite pods conjur-quartz-0 app=async-conjur-standby
-	kubectl label --overwrite statefulSet conjur-quartz app=async-conjur-standby
-
 }
 
 ##############################
@@ -61,27 +59,17 @@ startup_conjur_service() {
 # Input: none
 configure_conjur_cluster() {
 				# get name of stateful set that is labeled conjur-master
-        local MASTER_SET=$(kubectl get statefulSet \
-                -l app=conjur-master --no-headers \
-                | awk '{ print $1 }' )
-	local MASTER_POD_NAME=$MASTER_SET-0
-	local MASTER_POD_IP=$(kubectl describe pod $MASTER_POD_NAME | awk '/IP:/ { print $2 }')
 				# configure Conjur master server using evoke
-	kubectl exec -it $MASTER_POD_NAME -- evoke configure master -h $CONJUR_MASTER_DNS_NAME -p $ROOT_KEY $CONJUR_CLUSTER_ACCT
+	kubectl exec -it $MASTER_POD_NAME -- evoke configure master -h $CONJUR_MASTER_DNS_NAME -p $ROOT_KEY -j ./etc/conjur.json $CONJUR_CLUSTER_ACCT
 
         			# prepare seed files for standbys and followers
         kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke seed standby > /tmp/standby-seed.tar"
-	kubectl cp $MASTER_POD_NAME:/tmp/standby-seed.tar ./standby-seed.tar
+	kubectl cp $MASTER_POD_NAME:/tmp/standby-seed.tar ./etc/standby-seed.tar
         kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke seed follower $CONJUR_MASTER_DNS_NAME > /tmp/follower-seed.tar"
-	kubectl cp $MASTER_POD_NAME:/tmp/follower-seed.tar ./follower-seed.tar
+	kubectl cp $MASTER_POD_NAME:/tmp/follower-seed.tar ./etc/follower-seed.tar
 
 
         			# get name of statefulSet that is labeled sync standby
-        local SYNC_STANDBY_SET=$(kubectl get statefulSet \
-                -l app=sync-conjur-standby --no-headers \
-                | awk '{ print $1 }' )
-	local SYNC_STANDBY_POD_NAME=$SYNC_STANDBY_SET-0
-        			# copy seed file to sync standby, unpack and configure
 	kubectl cp ./standby-seed.tar $SYNC_STANDBY_POD_NAME:/tmp/standby-seed.tar
 	kubectl exec -it $SYNC_STANDBY_POD_NAME -- bash -c "evoke unpack seed /tmp/standby-seed.tar"
 	kubectl exec -it $SYNC_STANDBY_POD_NAME -- evoke configure standby -i $MASTER_POD_IP
