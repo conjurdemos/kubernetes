@@ -1,18 +1,20 @@
-#!/bin/bash
+#!/bin/bash -x
 
-exit 0
+if [[ ! -f /root/check.log ]]; then
+   touch /root/check.log
+fi
 
-proxy_address=$1
-proxy_port=$2
+echo "Input parameters: " $1 $2 $3 $4 >> /root/check.log
 server_address=$3
-server_port=$4
+echo "server_address: " $server_address  >> /root/check.log
 
-echo "server_address: " $server_address
-
-conjur_ok=$(curl -k https://172.17.0.2/health | jq '.ok')
+result=$(curl -k -s https://$server_address/health)
+conjur_ok=$(echo $result | jq '.ok')
 if [[ "$conjur_ok" == "true" ]]; then
-	echo "Conjur is OK"
+	echo "Conjur is OK" >> /root/check.log
 	exit 0
 fi
-echo "Conjur is NOT OK"
+echo "Conjur is NOT OK" >> /root/check.log
+echo "curl returned:" $result  >> /root/check.log
+echo "check status value:" $conjur_ok >> /root/check.log
 exit -1
