@@ -1,0 +1,5 @@
+Store API key for the client: 3r85dhb130tx7z26e3qn52smr3y62h6j6hb3qzf5j2h0fwsy2ddwn6
+Create k8s secret for the client API key and store it
+Extract the Conjur SSL certificate and store it
+
+

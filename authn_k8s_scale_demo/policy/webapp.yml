@@ -1,0 +1,9 @@
+- !policy
+  id: webapp
+  body:
+  - !layer
+
+  - !grant
+    role: !layer
+    members:
+    - !host /conjur/authn-k8s/minikube/default/apps/webapp

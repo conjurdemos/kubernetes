@@ -1,0 +1,16 @@
+- !policy
+  id: db
+  body:
+  - &variables
+    - !variable password
+
+  - !group secrets-users
+
+  - !permit
+    role: !group secrets-users
+    privilege: [ read, execute ]
+    resources: *variables
+
+  - !grant
+    role: !group secrets-users
+    member: !layer /webapp

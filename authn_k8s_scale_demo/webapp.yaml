@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: webapp
+spec:
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      volumes:
+        - name: conjur-access-token
+          emptyDir:
+            medium: Memory
+
+      containers:
+      - name: webapp-authenticator
+        image: scalability_k8s:local
+        command: [ ./authenticator.rb ]
+        env:
+        - name: CONJUR_APPLIANCE_URL
+          value: https://conjur-master/api
+        - name: CONJUR_AUTHN_URL
+          value: https://conjur-master/api/authn-k8s/minikube/default
+        - name: CONJUR_ACCOUNT
+          value: dev
+        - name: CONJUR_AUTHN_LOGIN
+          value: webapp
+        - name: CONJUR_SSL_CERTIFICATE
+          valueFrom:
+            configMapKeyRef:
+              name: webapp
+              key: ssl_certificate
+        - name: CONJUR_CLIENT_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: conjur-client-api-key
+              key: api-key
+        volumeMounts:
+        - mountPath: /run/conjur
+          name: conjur-access-token
+
+      - name: webapp
+        image: scalability_k8s:local
+        command: [ ./webapp.rb ]
+        env:
+        - name: CONJUR_APPLIANCE_URL
+          value: https://conjur-master/api
+        - name: CONJUR_ACCOUNT
+          value: dev
+        - name: CONJUR_SSL_CERTIFICATE
+          valueFrom:
+            configMapKeyRef:
+              name: webapp
+              key: ssl_certificate
+        volumeMounts:
+        - mountPath: /run/conjur/
+          name: conjur-access-token
+

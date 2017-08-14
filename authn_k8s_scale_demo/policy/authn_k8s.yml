@@ -1,0 +1,12 @@
+- !policy
+  id: conjur/authn-k8s/minikube/default
+  body:
+  - !webservice
+
+  - !host client
+
+  - !permit
+    resource: !webservice
+    privilege: [ read, execute ]
+    roles:
+      - !host client
