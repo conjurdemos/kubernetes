@@ -12,11 +12,10 @@ while !File.exists?(token_filename)
   sleep 2
 end
 
-
-api = Conjur::API.new_from_token JSON.parse(File.read(token_filename))
 variable_id = "db/password"
 
 while true
+  api = Conjur::API.new_from_token JSON.parse(File.read(token_filename))
   begin
     password = api.variable(variable_id).value
     puts "Database password : #{password}"
