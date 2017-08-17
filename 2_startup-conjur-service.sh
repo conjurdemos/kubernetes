@@ -1,4 +1,7 @@
-#!/bin/bash -x
+#!/bin/bash -e
+
+set -o pipefail
+
 # Assumptions:
 # - minikube and kubectl are already installed
 
@@ -38,7 +41,12 @@ startup_conjur_service() {
 	kubectl create -f $CONFIG_DIR/conjur-master-headless.yaml
 
 	# give containers time to get running
-	sleep 5
+	echo "Waiting for conjur-master-0 to launch"
+  while [[ $(kubectl exec conjur-master-0 evoke role) != "blank" ]]; do
+  	echo -n '.'
+  	sleep 5
+  done
+  echo "done"
 }
 
 ##############################
@@ -57,7 +65,7 @@ configure_conjur_cluster() {
   kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke -j /etc/conjur.json seed follower $CONJUR_MASTER_DNS_NAME > /tmp/follower-seed.tar"
 	kubectl cp $MASTER_POD_NAME:/tmp/follower-seed.tar $CONFIG_DIR/follower-seed.tar
 
-			# get master IP address for standby config
+	# get master IP address for standby config
 	MASTER_POD_IP=$(kubectl describe pod $MASTER_POD_NAME | awk '/IP:/ {print $2}')
 
 	# get list of the other pods 
@@ -88,9 +96,9 @@ start_load_balancer() {
 	CLUSTER_IP=$(kubectl describe svc conjur-master | awk '/IP:/ { print $2; exit}')
 	EXTERNAL_IP=$(kubectl describe svc conjur-master | awk '/External IPs:/ { print $3; exit}')
 
-				# inform user of IP addresses 
-	printf "\n\nIn conjur-client container, add:\n\t%s\tconjur-service\n to /etc/hosts.\n\n" $CLUSTER_IP 
-	printf "\n\nOutside the cluster, add:\n\t%s\tconjur-service\n to /etc/hosts.\n\n" $EXTERNAL_IP 
+	# inform user of IP addresses 
+	printf "\n\nIn conjur-client container, add:\n\t%s\tconjur-master\n to /etc/hosts.\n\n" $CLUSTER_IP 
+	printf "\n\nOutside the cluster, add:\n\t%s\tconjur-master\n to /etc/hosts.\n\n" $EXTERNAL_IP 
 }
 
 main $@

@@ -1,25 +1,25 @@
 global
 	daemon
 	maxconn 256
-	tune.ssl.default-dh-param 2048
 	external-check
 
 defaults
-	mode tcp
-	timeout connect 5000ms
-	timeout client 50000ms
-	timeout server 50000ms
+   mode tcp
+   timeout connect 5000ms
+   timeout client 50000ms
+   timeout server 50000ms
 
-frontend https-backends
+frontend f_conjur_master
 	bind *:443
-	default_backend servershttps
-	mode tcp
+	bind *:5432
+	default_backend b_conjur_master
 
-backend servershttps
-	mode tcp
+backend b_conjur_master
 	balance static-rr
 	option external-check
+	default-server inter 5s fall 3 rise 2
 	external-check path "/usr/bin:/usr/local/bin"
 	external-check command "/root/conjur-health-check.sh"
+
 # server details are appended below by write_haconfig.sh called
 # from the initcontainer - see haproxy-conjur-master.yaml

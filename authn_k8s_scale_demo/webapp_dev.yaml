@@ -15,9 +15,9 @@ spec:
     command: [ sleep, infinity ]
     env:
     - name: CONJUR_APPLIANCE_URL
-      value: https://172.17.0.2/api
+      value: https://conjur-master/api
     - name: CONJUR_AUTHN_URL
-      value: https://172.17.0.2/api/authn-k8s/minikube/default
+      value: https://conjur-master/api/authn-k8s/minikube/default
     - name: CONJUR_ACCOUNT
       value: dev
     - name: CONJUR_AUTHN_LOGIN

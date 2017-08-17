@@ -1,4 +1,7 @@
-#!/bin/bash 
+#!/bin/bash -e
+
+set -o pipefail
+
 # Assumptions:
 # - docker, minikube and kubectl are already installed
 

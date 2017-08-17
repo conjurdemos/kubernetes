@@ -1,15 +1,15 @@
-#!/bin/bash -x
+#!/bin/bash -ex
 #
-# Appends server entries for all conjur-appliance pods to a base
-# haproxy configuraton using pod names & IP addresses obtained via kubectl
+# Copies the file /root/haproxy_template to ./haproxy.cfg and then appends
+# the server entries for all conjur-appliance pods.
+# Pod names & IP addresses are obtained via kubectl.
 
-cp haproxy_template haproxy.cfg
-echo "copied template to target file"
+cp /root/haproxy_template haproxy.cfg
 
 pod_list=$(kubectl get pods -lapp=conjur-appliance | awk '/conjur-master/ {print $1}')
 for pod_name in $pod_list; do
 	pod_ip=$(kubectl describe pod $pod_name | awk '/IP:/ {print $2}')
-	echo -e '\t' server $pod_name $pod_ip:443 check >> ./haproxy.cfg
+	echo -e '\t' server $pod_name $pod_ip:443 check >> haproxy.cfg
 done
 
 exit 0

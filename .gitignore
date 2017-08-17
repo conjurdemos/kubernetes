@@ -1,3 +1,7 @@
+follower-seed.tar
+standby-seed.tar
+.conjurrc
+conjur-dev.pem
 conjur_server_build/*.deb
 scale_demo/conjur-dev.pem
 scale_demo/conjurrc

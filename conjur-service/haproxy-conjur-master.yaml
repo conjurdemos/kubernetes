@@ -28,8 +28,9 @@ metadata:
     app: haproxy-conjur-master
 spec:
   containers:
-  - name: haproxy-conjur-master
+  - name: haproxy
     image: haproxy:conjur
+    command: [ "sleep", "infinity" ]
     ports:
     - containerPort: 443
       name: https
@@ -39,15 +40,22 @@ spec:
       name: pg-main
     - containerPort: 5433
       name: pg-audit
-    lifecycle:
-      postStart:
-        exec:
-          command: ["/bin/sh", "-c", "cp /shared/haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg"]
+#    lifecycle:
+#      postStart:
+#        exec:
+#          command: ["/bin/sh", "-c", "cp /shared/haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg"]
     volumeMounts:
     - name: shared-data
       mountPath: /shared
-    - name: launch-dir
-      mountPath: /host-mount
+
+  - name: haproxy-init
+    image: haproxy:conjur
+    command: [ "sleep", "infinity" ]
+#    command: ["/bin/sh", "-c", "cd /shared; /root/write_haconfig.sh"]
+    volumeMounts:
+    - name: shared-data
+      mountPath: /shared
+
 # this part of the haproxy spec defines initialization of the haconfig
 # file with the actual IP addresses of the newly created Conjur master
 # and standby pods. It mounts the launch directory to run a script that
@@ -58,15 +66,3 @@ spec:
   volumes:
   - name: shared-data
     emptyDir: {}
-  - name: launch-dir
-    hostPath:
-      path: <path-to-rootdir-in-your-shell>/scalability-k8s
-  initContainers:
-  - name: init-haproxy-config
-    image: conjur-cli:local
-    command: ["/bin/sh", "-c", "cd /host-mount/haproxy; ./write_haconfig.sh; cp haproxy.cfg /shared/haproxy.cfg"]
-    volumeMounts:
-    - name: shared-data
-      mountPath: /shared
-    - name: launch-dir
-      mountPath: /host-mount

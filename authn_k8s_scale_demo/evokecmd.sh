@@ -1,16 +1,13 @@
 #!/bin/bash -ex
 
-MASTER_SET=$(kubectl get statefulSet \
-      -l app=conjur-master --no-headers \
-      | awk '{ print $1 }' )
-MASTER_POD_NAME=$MASTER_SET-0
+master_pod=$(kubectl get pod -l role=master --no-headers | awk '{ print $1 }')
 
 function evokecmd() {
   interactive=$1
   if [ $interactive = '-i' ]; then
     shift
-    kubectl exec -i $MASTER_POD_NAME -- $@
+    kubectl exec -i $master_pod -- $@
   else
-    kubectl exec $MASTER_POD_NAME -- $@
+    kubectl exec $master_pod -- $@
   fi
 }

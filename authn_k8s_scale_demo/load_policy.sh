@@ -10,5 +10,4 @@ if [[ -z $1 ]] ; then
 fi
 POLICY_FILE=$1
 
-conjur authn login
 conjur policy load --as-group security_admin policy/$POLICY_FILE

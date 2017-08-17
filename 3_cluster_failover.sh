@@ -1,4 +1,7 @@
-#!/bin/bash 
+#!/bin/bash -e
+
+set -o pipefail
+
 # Fails over to the most up-to-date, healthy standby
 #  - the current master is assumed unreachable and destroyed
 #  - all replication activity is halted
@@ -11,11 +14,6 @@
 declare CONFIG_DIR=conjur-service
 
 main() {
-	printf "\nThis script has to be run in a shell within the cluster\n"
-	printf "in order to connect to the standby containers. They are\n"
-	printf "not exposed to the external IP address like the master.\n\n"
-	read -n 1 -s -p 'Press any key to continue, Ctrl-C to abort'
-
 	delete_current_master
 	stop_all_replication
 	identify_standby_to_promote
@@ -65,7 +63,7 @@ identify_standby_to_promote() {
 
 	for pod_name in $pod_list; do
 		pod_ip=$(kubectl describe pod $pod_name | awk '/IP:/ {print $2}')
-		health_stats=$(curl -s -k https://$pod_ip/health)
+		health_stats=$(kubectl exec $pod_name curl localhost/health)
 		db_ok=$(echo $health_stats | jq -r ".database.ok")
 		if [[ "$db_ok" != "true" ]]; then
 			continue
@@ -144,8 +142,6 @@ configure_new_standby() {
   	sleep 5
   done
 	# copy seed file, unpack and configure
-	# copy conjur pgsql memory limits to pods
-	kubectl cp ./$CONFIG_DIR/conjur.json $new_pod:/etc/conjur.json
 
  	kubectl cp ./$CONFIG_DIR/standby-seed.tar $new_pod:/tmp/standby-seed.tar
   kubectl exec -it $new_pod -- bash -c "evoke unpack seed /tmp/standby-seed.tar"
