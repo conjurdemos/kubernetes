@@ -57,10 +57,12 @@ spec:
         hostPath:
           path: <path-to-root-from-here-on-your-machine>/scalability-k8s
 
-# it seems like a bad idea to have a mount a host volume in every container,
-# esp. in a multi-node environment. So the init container mounts the host volume
-# and copies the seed file into a shared volume. Unpacking a seed file destroys
-# the tarfile so every follower needs its own.
+# it seems like a bad idea to have a mount a host volume in every 
+# container, esp. in a multi-node environment. So the init container 
+# mounts the host volume and copies the seed file into a shared volume. 
+# Unpacking a seed file destroys the tarfile so every follower needs 
+# its own. So the postStart hook above copies the seed file into the 
+# container from the shared volume and unpacks it.
       initContainers:
       - name: init-followers
         image: cdemo/curl:local

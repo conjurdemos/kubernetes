@@ -1,5 +1,9 @@
 #!/bin/bash -x
+<<<<<<< HEAD
 conjur init -h conjur-master -f conjurrc
+=======
+conjur init -f conjurrc
+>>>>>>> one-set-master
 export CONJURRC=$(pwd)/conjurrc
 printf "Login with password 'Cyberark1'...\n"
 conjur authn login admin

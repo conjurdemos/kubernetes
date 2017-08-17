@@ -1,0 +1,72 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: conjur-master
+  labels:
+    app: haproxy-conjur-master
+spec:
+  ports:
+  - port: 443
+    name: https
+  - port: 636
+    name: ldaps
+  - port: 5432
+    name: pg-main
+  - port: 5433
+    name: pg-audit
+  selector:
+    app: haproxy-conjur-master
+  externalIPs: 
+    - 192.168.99.100		# you can get this value w/ "minikube ip" command
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: haproxy-conjur-master
+  labels:
+    app: haproxy-conjur-master
+spec:
+  containers:
+  - name: haproxy-conjur-master
+    image: haproxy:conjur
+    ports:
+    - containerPort: 443
+      name: https
+    - containerPort: 636
+      name: ldaps
+    - containerPort: 5432
+      name: pg-main
+    - containerPort: 5433
+      name: pg-audit
+    lifecycle:
+      postStart:
+        exec:
+          command: ["/bin/sh", "-c", "cp /shared/haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg"]
+    volumeMounts:
+    - name: shared-data
+      mountPath: /shared
+    - name: launch-dir
+      mountPath: /host-mount
+# this part of the haproxy spec defines initialization of the haconfig
+# file with the actual IP addresses of the newly created Conjur master
+# and standby pods. It mounts the launch directory to run a script that
+# interogates k8s w/ kubectl.
+# That script appends server details to haproxy_template to create 
+# haproxy.cfg, which is copied to a shared volume. The haproxy container
+# then copies that file to its appropriate location in the postStart hook.
+  volumes:
+  - name: shared-data
+    emptyDir: {}
+  - name: launch-dir
+    hostPath:
+      path: <path-to-rootdir-in-your-shell>/scalability-k8s
+  initContainers:
+  - name: init-haproxy-config
+    image: conjur-cli:local
+    command: ["/bin/sh", "-c", "cd /host-mount/haproxy; ./write_haconfig.sh; cp haproxy.cfg /shared/haproxy.cfg"]
+    volumeMounts:
+    - name: shared-data
+      mountPath: /shared
+    - name: launch-dir
+      mountPath: /host-mount
