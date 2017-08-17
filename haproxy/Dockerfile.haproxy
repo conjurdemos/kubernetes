@@ -7,6 +7,8 @@ RUN apt-get install -y jq
 RUN apt-get install -y vim
 
 COPY conjur-health-check.sh /root/conjur-health-check.sh
-RUN chmod +x /root/conjur-health-check.sh
+			# config file is created in initcontainer
+#COPY haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg
 
-COPY haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg
+# For debugging: on container startup, wait forever for interrupt signal
+#CMD exec /bin/bash -c "trap : TERM INT; sleep infinity & wait"

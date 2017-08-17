@@ -1,17 +1,14 @@
-#!/bin/bash 
+#!/bin/bash -x
 # Assumptions:
-# - docker, minikube and kubectl are already installed
+# - minikube and kubectl are already installed
 
+				# directory of yaml
+declare CONFIG_DIR=./conjur-service
+				# initially, master is always pod 0
+declare MASTER_POD_NAME=conjur-master-0
 declare ROOT_KEY=Cyberark1
 declare CONJUR_CLUSTER_ACCT=dev
 declare CONJUR_MASTER_DNS_NAME=conjur-master
-declare MASTER_POD_NAME=conjur-master-headless-0
-
-# sudo not required for mac, but is for linux
-DOCKER="docker"
-if [[ "$(uname -s)" == "Linux" ]]; then
-        DOCKER="sudo docker"
-fi
 
 ##############################
 ##############################
@@ -20,7 +17,8 @@ fi
 main() {
 	startup_env
 	startup_conjur_service
-#	configure_conjur_cluster
+	configure_conjur_cluster
+	start_load_balancer
 }
 
 ##############################
@@ -34,58 +32,69 @@ startup_env() {
 }
 
 ##############################
-# STEP 2 - start service and label pods w/ roles
+# STEP 2 - start service 
 startup_conjur_service() {
-				# delete configmap if it exists
-        kubectl delete configmap conjur-master-config >> /dev/null
-
-        			# write out cluster config parameters
-        kubectl create configmap conjur-master-config \
-                --from-literal=master-pod-name=$MASTER_POD_NAME \
-                --from-literal=conjur-master-dns-name=$CONJUR_MASTER_DNS_NAME \
-                --from-literal=root-key=$ROOT_KEY \
-                --from-literal=conjur-cluster-acct=$CONJUR_CLUSTER_ACCT
-
 				# start up conjur services from yaml
-	kubectl create -f ./etc/conjur-master-headless.yaml
-				# start up load balancer
-	kubectl create -f ./etc/haproxy-headless.yaml
+	kubectl create -f $CONFIG_DIR/conjur-master-headless.yaml
 
 				# give containers time to get running
+	sleep 5
 }
 
 ##############################
 # STEP 3 - configure cluster based on role labels
-# Input: none
+# 
+
 configure_conjur_cluster() {
-				# get name of stateful set that is labeled conjur-master
-				# configure Conjur master server using evoke
-	kubectl exec -it $MASTER_POD_NAME -- evoke configure master -h $CONJUR_MASTER_DNS_NAME -p $ROOT_KEY -j ./etc/conjur.json $CONJUR_CLUSTER_ACCT
+			# label pod with role
+	kubectl label --overwrite pod $MASTER_POD_NAME role=master
+			# copy conjur pgsql memory limits to pods
+	kubectl cp $CONFIG_DIR/conjur.json $MASTER_POD_NAME:/etc/conjur.json
+			# configure Conjur master server using evoke
+	kubectl exec -it $MASTER_POD_NAME -- evoke configure master -j /etc/conjur.json -h $CONJUR_MASTER_DNS_NAME -p $ROOT_KEY $CONJUR_CLUSTER_ACCT
 
-        			# prepare seed files for standbys and followers
+
+       			# prepare seed files for standbys and followers
         kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke seed standby > /tmp/standby-seed.tar"
-	kubectl cp $MASTER_POD_NAME:/tmp/standby-seed.tar ./etc/standby-seed.tar
-        kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke seed follower $CONJUR_MASTER_DNS_NAME > /tmp/follower-seed.tar"
-	kubectl cp $MASTER_POD_NAME:/tmp/follower-seed.tar ./etc/follower-seed.tar
+	kubectl cp $MASTER_POD_NAME:/tmp/standby-seed.tar $CONFIG_DIR/standby-seed.tar
+        kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke -j /etc/conjur.json seed follower $CONJUR_MASTER_DNS_NAME > /tmp/follower-seed.tar"
+	kubectl cp $MASTER_POD_NAME:/tmp/follower-seed.tar $CONFIG_DIR/follower-seed.tar
 
+			# get master IP address for standby config
+	MASTER_POD_IP=$(kubectl describe pod $MASTER_POD_NAME | awk '/IP:/ {print $2}')
 
-        			# get name of statefulSet that is labeled sync standby
-	kubectl cp ./standby-seed.tar $SYNC_STANDBY_POD_NAME:/tmp/standby-seed.tar
-	kubectl exec -it $SYNC_STANDBY_POD_NAME -- bash -c "evoke unpack seed /tmp/standby-seed.tar"
-	kubectl exec -it $SYNC_STANDBY_POD_NAME -- evoke configure standby -i $MASTER_POD_IP
-				# force sync replication to designated sync standby
-        kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke replication sync --force"
+				# get list of the other pods 
+	pod_list=$(kubectl get pods -lrole=unset \
+			| awk '/conjur-master/ {print $1}')
+	for pod_name in $pod_list; do
+				# label pod with role
+		kubectl label --overwrite pod $pod_name role=standby
+		kubectl cp $CONFIG_DIR/conjur.json $pod_name:/etc/conjur.json
+				# configure standby
+		kubectl cp $CONFIG_DIR/standby-seed.tar $pod_name:/tmp/standby-seed.tar
+		kubectl exec -it $pod_name -- bash -c "evoke unpack seed /tmp/standby-seed.tar"
+		kubectl exec -it $pod_name -- evoke configure standby -j /etc/conjur.json -i $MASTER_POD_IP
+	done
 
+				# enable sync replication to designated sync standby
+        kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke replication sync"
+}
 
-        			# get name of statefulSet that is labeled async standby
-        local ASYNC_STANDBY_SET=$(kubectl get statefulSet \
-                -l app=async-conjur-standby --no-headers \
-                | awk '{ print $1 }' )
-	local ASYNC_STANDBY_POD_NAME=$ASYNC_STANDBY_SET-0
-        			# copy seed file to async standby, unpack and configure
-	kubectl cp ./standby-seed.tar $ASYNC_STANDBY_POD_NAME:/tmp/standby-seed.tar
-	kubectl exec -it $ASYNC_STANDBY_POD_NAME -- bash -c "evoke unpack seed /tmp/standby-seed.tar"
-	kubectl exec -it $ASYNC_STANDBY_POD_NAME -- evoke configure standby -i $MASTER_POD_IP
+##########################
+# START_LOAD_BALANCER
+#
+
+start_load_balancer() {
+				# start up load balancer
+	kubectl create -f $CONFIG_DIR/haproxy-conjur-master.yaml
+
+				# get internal/external IP addresses
+	CLUSTER_IP=$(kubectl describe svc conjur-master | awk '/IP:/ { print $2; exit}')
+	EXTERNAL_IP=$(kubectl describe svc conjur-master | awk '/External IPs:/ { print $3; exit}')
+
+				# inform user of IP addresses 
+	printf "\n\nIn conjur-client container, add:\n\t%s\tconjur-service\n to /etc/hosts.\n\n" $CLUSTER_IP 
+	printf "\n\nOutside the cluster, add:\n\t%s\tconjur-service\n to /etc/hosts.\n\n" $EXTERNAL_IP 
 }
 
 main $@

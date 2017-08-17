@@ -6,6 +6,7 @@ RUN curl -o conjur.deb -L https://github.com/conjurinc/cli-ruby/releases/downloa
   && dpkg -i conjur.deb \
   && rm conjur.deb
 
+RUN apt-get install -y vim
 RUN apt-get install -y jq
 RUN apt-get install -y apt-transport-https
 RUN apt-get install -y ca-certificates

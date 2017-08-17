@@ -1,5 +1,5 @@
 #!/bin/bash -x
-conjur init -h conjur-service -f conjurrc
+conjur init -f conjurrc
 export CONJURRC=$(pwd)/conjurrc
 printf "Login with admin/Cyberark1...\n"
 conjur authn login 

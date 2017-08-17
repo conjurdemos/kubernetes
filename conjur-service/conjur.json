@@ -1,8 +1,5 @@
 {
   "postgresql": {
     "allocated_memory_kb": 100000,
-    "config": {
-      "max_connections": 20
-    }
   }
 }

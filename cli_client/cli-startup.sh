@@ -36,9 +36,8 @@ startup_conjur_client() {
 # configure client network connect to conjur master
 configure_conjur_client() {
 				# get conjur service IP
-        CLUSTER_IP=$(kubectl describe svc conjur-service | awk '/IP:/ { print $2; exit}')
-	kubectl exec conjur-cli -- /bin/bash -c "printf \"%s\t%s\n\" $CLUSTER_IP conjur-service >> /etc/hosts"
-	kubectl exec conjur-cli -- /bin/bash -c "curl -k https://conjur-service/health"
+        CLUSTER_IP=$(kubectl describe svc conjur-master | awk '/IP:/ { print $2; exit}')
+	kubectl exec conjur-cli -- /bin/bash -c "curl -k https://conjur-master/health"
 }
 ##############################
 # initialize client cli
