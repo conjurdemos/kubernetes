@@ -37,7 +37,7 @@ startup_conjur_service() {
 				# start up conjur services from yaml
 	kubectl create -f $CONFIG_DIR/conjur-master-headless.yaml
 
-				# give containers time to get running
+	# give containers time to get running
 	sleep 5
 }
 
