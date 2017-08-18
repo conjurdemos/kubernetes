@@ -1,6 +1,7 @@
 #!/bin/bash
 
 kubectl delete -f ./conjur-service
+kubectl delete -f ./authn_k8s_scale_demo/webapp.yaml
 kubectl delete replicaset -lapp=webapp
 kubectl delete replicaset -lapp=conjur-master
 kubectl delete replicaset -lapp=conjur-follower
