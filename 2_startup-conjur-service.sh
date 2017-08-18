@@ -5,9 +5,9 @@ set -o pipefail
 # Assumptions:
 # - minikube and kubectl are already installed
 
-				# directory of yaml
+# directory of yaml
 declare CONFIG_DIR=./conjur-service
-				# initially, master is always pod 0
+# initially, master is always pod 0
 declare MASTER_POD_NAME=conjur-master-0
 declare ROOT_KEY=Cyberark1
 declare CONJUR_CLUSTER_ACCT=dev

@@ -10,12 +10,13 @@ Prerequisites:
 
 # Cluster management
 
-- 1a_load_container.sh - initial load of Conjur appliance container (see comments in the file for faster procedure using `docker pull`)
-- 1b_build_appliance_image.sh - installs authn-k8s into the appliance image
-- 2_startup-conjur-service.sh - sets up master and 2 standbys using yaml files conjur-service directory
-- 3_cluster_failover.sh - fails over to standby pod tagged as synchronous
-- 4_delete_all.sh - deletes entire cluster
-- time_sync.sh - used as needed to sync vbox clock with host
+- 1a_load_container.sh - initial load of Conjur appliance container (see comments in the file for faster procedure using `docker pull`).
+- 1b_build_appliance_image.sh - installs authn-k8s into the appliance image.
+- 2_startup-conjur-service.sh - sets up master and 2 standbys using yaml files conjur-service directory. Deploys a `conjur-master` service which uses HAProxy.
+- 3_startup-followers.sh - creates and configures the `conjur-follower` service
+- 4_cluster_failover.sh - fails over to standby pod tagged as synchronous.
+- 5_delete_all.sh - deletes entire cluster.
+- time_sync.sh - used as needed to sync vbox clock with host.
 
 # `authn-k8s` scale demo
 

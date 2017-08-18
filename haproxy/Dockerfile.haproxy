@@ -14,6 +14,10 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s
 RUN chmod +x ./kubectl
 RUN mv ./kubectl /usr/local/bin/kubectl
 
-COPY haproxy_template       /root/
-COPY write_haconfig.sh      /root/
+COPY haproxy.cfg            /usr/local/etc/haproxy/
+COPY http_servers.sh        /root/
+COPY pg_servers.sh          /root/
 COPY conjur-health-check.sh /root/
+COPY start.sh               /
+
+ENTRYPOINT [ "/start.sh" ]

@@ -9,15 +9,11 @@ spec:
   ports:
   - port: 443
     name: https
-  - port: 636
-    name: ldaps
   - port: 5432
     name: pg-main
-  - port: 5433
-    name: pg-audit
   selector:
     app: haproxy-conjur-master
-  externalIPs: 
+  externalIPs:
     - 192.168.99.100		# you can get this value w/ "minikube ip" command
 ---
 apiVersion: v1
@@ -30,7 +26,6 @@ spec:
   containers:
   - name: haproxy
     image: haproxy:conjur
-    command: [ "sleep", "infinity" ]
     ports:
     - containerPort: 443
       name: https
@@ -40,29 +35,4 @@ spec:
       name: pg-main
     - containerPort: 5433
       name: pg-audit
-#    lifecycle:
-#      postStart:
-#        exec:
-#          command: ["/bin/sh", "-c", "cp /shared/haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg"]
     volumeMounts:
-    - name: shared-data
-      mountPath: /shared
-
-  - name: haproxy-init
-    image: haproxy:conjur
-    command: [ "sleep", "infinity" ]
-#    command: ["/bin/sh", "-c", "cd /shared; /root/write_haconfig.sh"]
-    volumeMounts:
-    - name: shared-data
-      mountPath: /shared
-
-# this part of the haproxy spec defines initialization of the haconfig
-# file with the actual IP addresses of the newly created Conjur master
-# and standby pods. It mounts the launch directory to run a script that
-# interogates k8s w/ kubectl.
-# That script appends server details to haproxy_template to create 
-# haproxy.cfg, which is copied to a shared volume. The haproxy container
-# then copies that file to its appropriate location in the postStart hook.
-  volumes:
-  - name: shared-data
-    emptyDir: {}
