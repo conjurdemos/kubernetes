@@ -57,13 +57,11 @@ configure_conjur_cluster() {
 	# label pod with role
 	kubectl label --overwrite pod $MASTER_POD_NAME role=master
 	# configure Conjur master server using evoke
-	kubectl exec -it $MASTER_POD_NAME -- evoke configure master -j /etc/conjur.json -h $CONJUR_MASTER_DNS_NAME -p $ROOT_KEY $CONJUR_CLUSTER_ACCT
+	kubectl exec $MASTER_POD_NAME -- evoke configure master -j /etc/conjur.json -h $CONJUR_MASTER_DNS_NAME -p $ROOT_KEY $CONJUR_CLUSTER_ACCT
 
 	# prepare seed files for standbys and followers
-  kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke seed standby > /tmp/standby-seed.tar"
-	kubectl cp $MASTER_POD_NAME:/tmp/standby-seed.tar $CONFIG_DIR/standby-seed.tar
-  kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke -j /etc/conjur.json seed follower $CONJUR_MASTER_DNS_NAME > /tmp/follower-seed.tar"
-	kubectl cp $MASTER_POD_NAME:/tmp/follower-seed.tar $CONFIG_DIR/follower-seed.tar
+  kubectl exec $MASTER_POD_NAME evoke seed standby > $CONFIG_DIR/standby-seed.tar
+  kubectl exec $MASTER_POD_NAME evoke seed follower conjur-follower > $CONFIG_DIR/follower-seed.tar
 
 	# get master IP address for standby config
 	MASTER_POD_IP=$(kubectl describe pod $MASTER_POD_NAME | awk '/IP:/ {print $2}')
@@ -76,12 +74,12 @@ configure_conjur_cluster() {
 		kubectl label --overwrite pod $pod_name role=standby
 		# configure standby
 		kubectl cp $CONFIG_DIR/standby-seed.tar $pod_name:/tmp/standby-seed.tar
-		kubectl exec -it $pod_name -- bash -c "evoke unpack seed /tmp/standby-seed.tar"
-		kubectl exec -it $pod_name -- evoke configure standby -j /etc/conjur.json -i $MASTER_POD_IP
+		kubectl exec $pod_name evoke unpack seed /tmp/standby-seed.tar
+		kubectl exec $pod_name -- evoke configure standby -j /etc/conjur.json -i $MASTER_POD_IP
 	done
 
 	# enable sync replication to designated sync standby
-  kubectl exec -it $MASTER_POD_NAME -- bash -c "evoke replication sync"
+  kubectl exec $MASTER_POD_NAME -- bash -c "evoke replication sync"
 }
 
 ##########################
