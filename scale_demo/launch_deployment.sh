@@ -62,11 +62,7 @@ main() {
         $(kubectl delete configmap $deployment_name) >> /dev/null     # delete configmap if it exists
         # write out endpoint, access token, variable name and sleep time
         kubectl create configmap $deployment_name \
-<<<<<<< HEAD
-                --from-literal=conjur-service-url=https://conjur-master/api \
-=======
                 --from-literal=conjur-service-url=$CONJUR_APPLIANCE_URL \
->>>>>>> one-set-master
                 --from-literal=deployment-name=$deployment_name \
                 --from-literal=api-key=$HOST_API_KEY \
                 --from-literal=var-name=$var_id \

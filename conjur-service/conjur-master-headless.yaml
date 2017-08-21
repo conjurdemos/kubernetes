@@ -16,7 +16,7 @@ metadata:
   name: conjur-master
 spec:
   serviceName: conjur-master-headless
-  replicas: 3
+  replicas: 1
   template:
     metadata:
       labels:

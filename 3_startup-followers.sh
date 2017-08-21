@@ -3,14 +3,6 @@
 set -o pipefail
 
 # Configures followers
-# Fails over to the most up-to-date, healthy standby
-#  - the current master is assumed unreachable and destroyed
-#  - all replication activity is halted
-#  - the most up-to-date healthy standby is identified as the new master
-#  - all other standbys are rebased to the new master
-#  - that new master is promoted 
-#  - a new sync standby is created with the old masters pod
-#  - sychronous replication is re-established
 
 declare CONFIG_DIR=conjur-service
 
@@ -23,6 +15,7 @@ main() {
 
 configure_followers() {
 	kubectl create -f $CONFIG_DIR/conjur-follower.yaml
+	sleep 5
 
 	# get list of the other pods 
 	pod_list=$(kubectl get pods -lapp=conjur-follower \

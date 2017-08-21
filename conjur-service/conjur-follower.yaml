@@ -21,7 +21,7 @@ metadata:
   labels:
     app: conjur-follower
 spec:
-  replicas: 1
+  replicas: 2
   template:
     metadata:
       labels:
@@ -33,5 +33,5 @@ spec:
         ports:
         - containerPort: 443
           name: https
-        - containerPort: 636
-          name: ldaps
+        - containerPort: 5432
+          name: pg-main

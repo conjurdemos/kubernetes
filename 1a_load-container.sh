@@ -27,29 +27,51 @@ fi
 main() {
 	startup_env
 	load_tag_conjur_image
-	pushd ./conjur_server_build
-	./build.sh
-	popd
+	build_conjur_authnk8s_image
+	build_conjur_cli_image
+	build_haproxy_image
 }
 
 ##############################
 ##############################
-
-##############################
-# STEP 1 - startup environment
 startup_env() {
+	minikube_status=$(minikube status | awk '/minikube/ {print $2}') 
+	if [[ "$minikube_status" == "Stopped" ]]; then
+		minikube start
+	fi
 	# use the minikube docker environment
 	eval $(minikube docker-env)
 }
 
 ##############################
-# STEP 2 - load appliance and tag as conjur-appliance:local
+# load appliance and tag as conjur-appliance:local
 load_tag_conjur_image() {
 	$DOCKER load -i $CONJUR_APPLIANCE_TAR
 	CONTAINER_NAME=$($DOCKER images | awk '/registry.tld/ { print $1":"$2; exit}')
 
 	# use 'local' tag to prevent kubectl from trying to pull latest
 	$DOCKER tag $CONTAINER_NAME conjur-appliance:4.9-stable
+}
+
+##############################
+build_conjur_authnk8s_image() {
+	pushd ./conjur_server_build
+	./build.sh
+	popd
+}
+
+##############################
+build_haproxy_image() {
+	pushd ./haproxy
+	./build.sh
+	popd
+}
+
+##############################
+build_conjur_cli_image() {
+	pushd ./cli_client/cli_image_build
+	./build.sh
+	popd
 }
 
 main $@

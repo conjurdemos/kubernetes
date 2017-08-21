@@ -42,6 +42,7 @@ startup_conjur_service() {
 
 	# give containers time to get running
 	echo "Waiting for conjur-master-0 to launch"
+	sleep 5
   while [[ $(kubectl exec conjur-master-0 evoke role) != "blank" ]]; do
   	echo -n '.'
   	sleep 5
@@ -56,9 +57,12 @@ startup_conjur_service() {
 configure_conjur_cluster() {
 	# label pod with role
 	kubectl label --overwrite pod $MASTER_POD_NAME role=master
+
+	printf "Configuring conjur-master %s...\n" $MASTER_POD_NAME
 	# configure Conjur master server using evoke
 	kubectl exec $MASTER_POD_NAME -- evoke configure master -j /etc/conjur.json -h $CONJUR_MASTER_DNS_NAME -p $ROOT_KEY $CONJUR_CLUSTER_ACCT
 
+	printf "Preparing seed files...\n"
 	# prepare seed files for standbys and followers
   kubectl exec $MASTER_POD_NAME evoke seed standby > $CONFIG_DIR/standby-seed.tar
   kubectl exec $MASTER_POD_NAME evoke seed follower conjur-follower > $CONFIG_DIR/follower-seed.tar
@@ -70,6 +74,7 @@ configure_conjur_cluster() {
 	pod_list=$(kubectl get pods -lrole=unset \
 			| awk '/conjur-master/ {print $1}')
 	for pod_name in $pod_list; do
+		printf "Configuring standby %s...\n" $pod_name
 		# label pod with role
 		kubectl label --overwrite pod $pod_name role=standby
 		# configure standby
@@ -78,8 +83,11 @@ configure_conjur_cluster() {
 		kubectl exec $pod_name -- evoke configure standby -j /etc/conjur.json -i $MASTER_POD_IP
 	done
 
-	# enable sync replication to designated sync standby
-  kubectl exec $MASTER_POD_NAME -- bash -c "evoke replication sync"
+	if [[ "$pod_list" != "" ]]; then
+		printf "Starting synchronous replication...\n"
+		# enable sync replication to designated sync standby
+		kubectl exec $MASTER_POD_NAME -- bash -c "evoke replication sync"
+	fi
 }
 
 ##########################
@@ -90,6 +98,7 @@ start_load_balancer() {
 	# start up load balancer
 	kubectl create -f $CONFIG_DIR/haproxy-conjur-master.yaml
 
+	sleep 5
 	# get internal/external IP addresses
 	CLUSTER_IP=$(kubectl describe svc conjur-master | awk '/IP:/ { print $2; exit}')
 	EXTERNAL_IP=$(kubectl describe svc conjur-master | awk '/External IPs:/ { print $3; exit}')
