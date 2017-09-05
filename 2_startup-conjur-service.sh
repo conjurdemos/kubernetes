@@ -9,7 +9,7 @@ set -o pipefail
 declare CONFIG_DIR=./conjur-service
 # initially, master is always pod 0
 declare MASTER_POD_NAME=conjur-master-0
-declare ROOT_KEY=Cyberark1
+declare ADMIN_PASSWORD=Cyberark1
 declare CONJUR_CLUSTER_ACCT=dev
 declare CONJUR_MASTER_DNS_NAME=conjur-master
 
@@ -60,7 +60,7 @@ configure_conjur_cluster() {
 
 	printf "Configuring conjur-master %s...\n" $MASTER_POD_NAME
 	# configure Conjur master server using evoke
-	kubectl exec $MASTER_POD_NAME -- evoke configure master -j /etc/conjur.json -h $CONJUR_MASTER_DNS_NAME -p $ROOT_KEY $CONJUR_CLUSTER_ACCT
+	kubectl exec $MASTER_POD_NAME -- evoke configure master -j /etc/conjur.json -h $CONJUR_MASTER_DNS_NAME -p $ADMIN_PASSWORD $CONJUR_CLUSTER_ACCT
 
 	printf "Preparing seed files...\n"
 	# prepare seed files for standbys and followers
