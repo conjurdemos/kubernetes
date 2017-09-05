@@ -5,28 +5,29 @@ Goal: The scalability-demo implemented in Kubernetes, with a full Conjur cluster
 Scenario: Spin up a bunch of minimal containers, each of which fetches a secret every few seconds in a continuous loop. Change the secret, deny access, failover to standby and watch effects.
 
 Prerequisites:
-- minikube
-- kubectl
-- download [conjur-authn-k8s_0.2.0.0-91ac501_amd64.deb.zip](https://github.com/conjurdemos/scalability-k8s/files/1220010/conjur-authn-k8s_0.2.0.0-91ac501_amd64.deb.zip) to the directory "conjur_server_build" and unzip it.
+- [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
+- [Conjur CLI](https://github.com/cyberark/conjur-cli/releases)
+- Download [conjur-authn-k8s_0.2.0.0-91ac501_amd64.deb.zip](https://github.com/conjurdemos/scalability-k8s/files/1220010/conjur-authn-k8s_0.2.0.0-91ac501_amd64.deb.zip) to the directory "conjur_server_build" and unzip it.
 
 # Cluster management
 
-- 1a_load_container.sh - initial load of Conjur appliance container (see comments in the file for faster procedure using `docker pull`).
-- 1b_build_appliance_image.sh - installs authn-k8s into the appliance image.
+- 1_build_all.sh - create `minikube` and build all the demo images.
 - 2_startup-conjur-service.sh - sets up master and 2 standbys using yaml files conjur-service directory. Deploys a `conjur-master` service which uses HAProxy.
-- 3_startup-followers.sh - creates and configures the `conjur-follower` service
-- 4_cluster_failover.sh - fails over to standby pod tagged as synchronous.
+- 3_startup-followers.sh - creates and configures the `conjur-follower` as a Kubernetes Service.
+- 4_cluster_failover.sh - fails over to a standby pod and re-launches the master as a standby.
 - 5_delete_all.sh - deletes entire cluster.
-- time_sync.sh - used as needed to sync vbox clock with host.
+- time_sync.sh - use as needed to sync vbox clock with host.
 
 # `authn-k8s` scale demo
 
 `./authn_k8s_scale_demo` (directory) - scripts and support for running the scalability demo using authn-k8s
 
-- 1_load_k8s_policy.sh - loads the policies which are performed by the Kubernetes admin
-- 2_load_app_policy.sh - loads the application policy, which would be managed by an application team
+- 0_demo_init.sh - configure and login the local command-line interface.
+- 1_load_k8s_policy.sh - loads the policies which are performed by the Kubernetes admi.n
+- 2_load_app_policy.sh - loads the application policy, which would be managed by an application team.
 - 3_load_db_policy.sh - loads the database policy, which would be managed by a DBA team.
 - 4_deploy.sh - deploys the `webapp` application and starts the containers fetching secrets.
+- 5_delete_deployment.sh - deletes all the k8s objects.
 - webapp.yaml - Kubernetes description for the `webapp` application. 
 
 # API key scale demo (deprecated)
@@ -54,29 +55,3 @@ Prerequisites:
   - build.sh - script that generates build
   - webapp1.sh - "application" that runs in each demo container in deployment
 
-# Artifact directories
-
-## `conjur-master` service
-
-conjur-service (directory) - holds all k8s yaml files to launch conjur-service
-  - conjur-service.yaml - top level, static IP address for service.
-  - conjur-jade.yaml - one of three statefulSets for master, standby, standby.
-  - conjur-quartz.yaml - one of three statefulSets for master, standby, standby.
-  - conjur-onyx.yaml - one of three statefulSets for master, standby, standby.
-  - conjur-headless.yaml - headless service per StatefulSet instructions.
-
-## `conjur-follower` service
-
-- follower-service-NOT_FINISHED (directory)
-  - follower-service.yaml - deployment description for followers. currently stops before calling "evoke configure follower" due to issues.
-
-## Conjur CLI
-
-- cli_client (directory) - experimental, for seeing how much cluster management can be done from inside the cluster.
-  - cli-conjur.yaml - k8s yaml descriptor for pod
-  - cli-shell.sh - exec into container (saves typing)
-  - cli-startup.sh - builds images, launches pod, execs into it for initialization
-  - cli_image_build (directory)
-    - Dockerfile - describes the build
-    - build.sh - runs the build
-  
