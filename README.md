@@ -7,6 +7,7 @@ Scenario: Spin up a bunch of minimal containers, each of which fetches a secret 
 Prerequisites:
 - minikube
 - kubectl
+- download [conjur-authn-k8s_0.2.0.0-91ac501_amd64.deb.zip](https://github.com/conjurdemos/scalability-k8s/files/1220010/conjur-authn-k8s_0.2.0.0-91ac501_amd64.deb.zip) to the directory "conjur_server_build" and unzip it.
 
 # Cluster management
 
