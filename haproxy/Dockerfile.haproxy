@@ -1,0 +1,23 @@
+FROM haproxy:1.7
+
+RUN apt-get update 
+RUN apt-get install -y bash 
+RUN apt-get install -y curl 
+RUN apt-get install -y jq 
+RUN apt-get install -y vim
+
+RUN apt-get install -y apt-transport-https
+RUN apt-get install -y ca-certificates
+RUN apt-get install -y software-properties-common
+
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+RUN chmod +x ./kubectl
+RUN mv ./kubectl /usr/local/bin/kubectl
+
+COPY haproxy.cfg            /usr/local/etc/haproxy/
+COPY http_servers.sh        /root/
+COPY pg_servers.sh          /root/
+COPY conjur-health-check.sh /root/
+COPY start.sh               /
+
+ENTRYPOINT [ "/start.sh" ]

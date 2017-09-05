@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 if [[ -z $1 ]] ; then
 	printf "\n\tUsage: %s <container-name>\n\n" $0
 	exit 1

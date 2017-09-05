@@ -1,0 +1,37 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: conjur-master-headless
+spec:
+  ports:
+  - port: 443
+  clusterIP: None
+  selector:
+    app: conjur-master
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: conjur-master
+spec:
+  serviceName: conjur-master-headless
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: conjur-appliance
+        role: unset        # set to master or standby when configured
+    spec:
+      containers:
+      - name: conjur-appliance
+        image: conjur-appliance:local
+        ports:
+        - containerPort: 443
+          name: https
+        - containerPort: 636
+          name: ldaps
+        - containerPort: 5432
+          name: pg-main
+        - containerPort: 5433
+          name: pg-audit

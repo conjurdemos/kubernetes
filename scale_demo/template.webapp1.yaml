@@ -13,44 +13,45 @@ spec:
       volumes:
       - name: shared-data
         emptyDir: {}
+      - name: launch-dir
+        hostPath:
+          path: {{demo-dir}}
       containers:
       - name: webapp1
         image: cdemo/curl:local
         volumeMounts:
         - name: shared-data
           mountPath: /shared
+        - name: launch-dir
+          mountPath: /host-mount
         env:
         - name: ENDPOINT
           valueFrom:
             configMapKeyRef:
               name: webapp1
-              key: conjur-service-url
+              key: conjur_service_url
         - name: DEPLOYMENT_NAME
           valueFrom:
             configMapKeyRef:
               name: webapp1
-              key: deployment-name
+              key: deployment_name
         - name: VAR_ID
           valueFrom:
             configMapKeyRef:
               name: webapp1
-              key: var-name
+              key: var_name
         - name: SLEEP_TIME
           valueFrom:
             configMapKeyRef:
               name: webapp1
-              key: sleep-time
+              key: sleep_time
       initContainers:
       - name: init-democ
-        image: cdemo/curl:local
-        command: ["/bin/sh", "-c", "echo $API_KEY > /shared/api_key"]
+        image: conjur-cli:local
+        command: ["/bin/sh", "-c", "cp /host-mount/api_key /shared/api_key"]
         volumeMounts:
         - name: shared-data
           mountPath: /shared
-        env:
-        - name: API_KEY
-          valueFrom:
-            configMapKeyRef:
-              name: webapp1
-              key: api-key
+        - name: launch-dir
+          mountPath: /host-mount
 

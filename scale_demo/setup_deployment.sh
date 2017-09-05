@@ -13,6 +13,8 @@
 # $4 - name to give kubernetes deployment
 
 declare CONJUR_HOST_FACTORY_TOKEN
+declare CONJUR_FOLLOWER_URL=https://conjur-follower/api
+
 main() {
 
         if [[ $# -ne 5 ]] ; then
@@ -46,10 +48,14 @@ main() {
 	hf_token_create $host_factory_name $hf_duration	   # sets CONJUR_HOST_FACTORY_TOKEN value
 	printf "\nHF token is: %s\n" $CONJUR_HOST_FACTORY_TOKEN
 
-	config_name="$deployment_name".config
-	kubectl delete configmap $config_name >> /dev/null	# delete configmap if it exists
+				# variable name can't have actual slashes in it
+	urlify $variable_name
+	variable_name=$URLIFIED
+	kubectl delete configmap $deployment_name >> /dev/null	# delete configmap if it exists
 	# write out host factory name & token, variable name and deployment name in configmap
-	kubectl create configmap $config_name \
+	kubectl create configmap $deployment_name \
+                --from-literal=conjur_service_url=$CONJUR_FOLLOWER_URL \
+		--from-literal=deployment_name=$deployment_name \
 		--from-literal=hf_name=$host_factory_name \
 		--from-literal=hf_token=$CONJUR_HOST_FACTORY_TOKEN \
 		--from-literal=var_name=$variable_name \

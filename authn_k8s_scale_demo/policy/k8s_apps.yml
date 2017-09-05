@@ -1,0 +1,16 @@
+- !policy
+  id: conjur/authn-k8s/minikube/default
+  body:
+  - !policy
+    id: apps
+    annotations:
+      description: Apps and services in Kubernetes "default" namespace.
+    body:
+    - &hosts
+      - !host webapp
+
+    - !permit
+      resources: *hosts
+      privilege: [ read, authenticate ]
+      roles:
+      - !host /conjur/authn-k8s/minikube/default/client
