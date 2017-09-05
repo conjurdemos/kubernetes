@@ -1,5 +1,6 @@
 follower-seed.tar
 standby-seed.tar
+conjurrc
 .conjurrc
 conjur-dev.pem
 conjur_server_build/*.deb
