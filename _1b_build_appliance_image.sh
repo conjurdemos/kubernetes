@@ -9,8 +9,3 @@ set -o pipefail
 pushd ./conjur_server_build
 ./build.sh
 popd
-
-# builds haproxy image with startup scripts
-pushd ./haproxy
-./build.sh
-popd
