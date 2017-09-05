@@ -1,2 +1,3 @@
-#!/bin/bash -e
+#!/bin/bash
+
 kubectl delete -f webapp.yaml
