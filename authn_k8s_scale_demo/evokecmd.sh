@@ -1,8 +1,7 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
-master_pod=$(kubectl get pod -l role=master --no-headers | awk '{ print $1 }')
-
-function evokecmd() {
+evokecmd() {
+  master_pod=$(kubectl get pod -l role=master --no-headers | awk '{ print $1 }')
   interactive=$1
   if [ $interactive = '-i' ]; then
     shift

@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash -e
 
 set -o pipefail
 
@@ -12,6 +12,8 @@ set -o pipefail
 #  - sychronous replication is re-established
 
 declare CONFIG_DIR=conjur-service
+
+kubectl config use-context conjur
 
 main() {
 	delete_current_master
