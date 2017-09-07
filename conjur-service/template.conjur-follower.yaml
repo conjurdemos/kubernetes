@@ -56,9 +56,10 @@ spec:
       initContainers:
       - name: init-followers
         image: conjur-cli:local
-        command: ["/bin/sh", "-c", "cp /host-mount/follower-seed.tar /shared" ]
+        command: ["/bin/sh", "-c", "trap : TERM INT; sleep infinity & wait"]
+#        command: ["/bin/sh", "-c", "cp /host-dir/follower-seed.tar /shared" ]
         volumeMounts:
         - name: shared-data
           mountPath: /shared
         - name: launch-dir
-          mountPath: /host-mount
+          mountPath: /host-dir
