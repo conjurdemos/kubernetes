@@ -1,14 +1,19 @@
 #!/bin/bash -e
 set -o pipefail
 
+# after running this, the demo will run w/o internet access
+
 eval $(minikube docker-env)
 
 main() {
 	load_conjur_image
 	tag_conjur_image
-	build_appliance_image
+	build_appliance_image	# adds authn_k8s service to appliance
 	build_haproxy_image
 	build_cli_client_image
+	build_demo_app_image
+	install_weavescope
+	./time_sync.sh
 }
 
 load_conjur_image() {
@@ -21,7 +26,7 @@ load_conjur_image() {
 
 # Option 2: To load the conjur appliance image from a local tarfile, 
 #  edit the line below with the path to the tarfile:
-	CONJUR_APPLIANCE_TAR=/home/demo/mydir/conjur-install-images/conjur-appliance-4.9.6.0.tar
+	CONJUR_APPLIANCE_TAR=~/conjur-install-images/conjur-appliance-4.9.6.0.tar
 	docker load -i $CONJUR_APPLIANCE_TAR
 }
 
@@ -48,9 +53,25 @@ build_haproxy_image() {
 }
 
 build_cli_client_image() {
-	pushd ./cli_client/cli_image_build
+	pushd ./cli_client/build
 	./build.sh
 	popd
+}
+
+install_weavescope() {
+        # setup weave scope for visualization
+        weave_image=$(docker images | awk '/weave/ {print $1}')
+        if [[ "$weave_image" == "" ]]; then
+                sudo curl -L git.io/scope -o /usr/local/bin/scope
+                sudo chmod a+x /usr/local/bin/scope
+		scope launch
+        fi
+}
+
+build_demo_app_image() {
+        pushd authn_k8s_scale_demo/build
+        ./build.sh
+        popd
 }
 
 main $@

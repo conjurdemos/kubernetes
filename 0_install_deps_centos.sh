@@ -56,6 +56,12 @@ install_minikube() {
 	sudo mv minikube /usr/local/bin/
 }
 
+install_conjur_cli() {
+	curl -o conjur.rpm -L https://github.com/cyberark/conjur-cli/releases/download/v5.4.0/conjur-5.4.0-1.el6.x86_64.rpm \
+  && sudo rpm -i conjur.rpm \
+  && rm conjur.rpm
+}
+
 start_minikube() {
 	minikube config set memory $MINIKUBE_VM_RAM
 	minikube start
@@ -77,14 +83,5 @@ configure_env() {
 	echo "minikube docker environment. issue this command:" 
 	echo "	eval $(minikube docker-env)"
 }
-
-install_conjur_cli() {
-	curl -o conjur.rpm -L https://github.com/cyberark/conjur-cli/releases/download/v5.4.0/conjur-5.4.0-1.el6.x86_64.rpm \
-  && sudo rpm -i conjur.rpm \
-  && rm conjur.rpm
-}
-
-main $@
-
 
 main $@

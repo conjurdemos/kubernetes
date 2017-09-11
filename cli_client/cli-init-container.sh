@@ -19,7 +19,7 @@ main() {
 ##############################
 # build client image
 build_conjur_client() {
-	pushd cli_image_build
+	pushd build
 	./build.sh
 	popd
 }
