@@ -20,8 +20,6 @@ declare CONJUR_FOLLOWER_DNS_NAME=conjur-follower.$CONJUR_NAMESPACE.svc.cluster.l
 # MAIN - takes no command line arguments
 
 main() {
-	startup_env
-	create_namespace
 	startup_conjur_service
 	configure_conjur_cluster
 	start_load_balancer
@@ -32,25 +30,6 @@ main() {
 ##############################
 ##############################
 
-##############################
-# STEP 1 - startup environment
-startup_env() {
-	# use the minikube docker environment
-	eval $(minikube docker-env)
-}
-
-create_namespace() {
-	if kubectl get namespace | grep -w $CONJUR_NAMESPACE > /dev/null; then
-		echo "Conjur namespace '$CONJUR_NAMESPACE' exists. I won't create it."
-	else
-		kubectl create namespace $CONJUR_NAMESPACE
-	fi
-
-	kubectl config set-context conjur --namespace=conjur --cluster=minikube --user=minikube
-}
-
-##############################
-# STEP 2 - start service 
 startup_conjur_service() {
 	kubectl config use-context conjur
 
@@ -68,9 +47,8 @@ startup_conjur_service() {
 }
 
 ##############################
-# STEP 3 - configure cluster based on role labels
+# Configure cluster based on role labels
 # 
-
 configure_conjur_cluster() {
 	kubectl config use-context conjur
 
