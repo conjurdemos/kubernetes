@@ -31,10 +31,10 @@ main() {
 # current master pod is role label is "master"
 
 delete_current_master() {
-	printf "deleting current master...\n"
-	OLD_MASTER_POD=$(kubectl get pod -l role=master --no-headers | awk '{ print $1 }' )
+	printf "Deleting current master...\n"
+	OLD_MASTER_POD=$(kubectl get pod -l role=master -o jsonpath="{.items[*].metadata.name}")
 	# replace old master w/ unconfigured pod
-	kubectl get pod $OLD_MASTER_POD -n default -o yaml | kubectl replace --force -f -
+	kubectl get pod $OLD_MASTER_POD -o yaml | kubectl replace --force -f -
 	kubectl label --overwrite pod $OLD_MASTER_POD role=unset
 }
 
@@ -43,8 +43,8 @@ delete_current_master() {
 # stop replication in all standbys
 
 stop_all_replication() {
-	printf "stopping replication...\n"
-	pod_list=$(kubectl get pods -lrole=standby --no-headers| awk '{print $1}')
+	printf "Stopping replication...\n"
+	pod_list=($(kubectl get pods -lrole=standby -o jsonpath="{.items[*].metadata.name}"))
 	for pod_name in $pod_list; do
  		kubectl exec -t $pod_name -- evoke replication stop
 	done
@@ -60,15 +60,14 @@ stop_all_replication() {
 #
 
 identify_standby_to_promote() {
-	printf "identifying standby to promote to master...\n"
-	# get list of pods that arent master
-	pod_list=$(kubectl get pods -lrole=standby --no-headers | awk '{print $1}')
+	printf "Identifying standby to promote to master...\n"
+	# get list of standby pods
+	pod_list=($(kubectl get pods -lrole=standby -o jsonpath="{.items[*].metadata.name}"))
 	# find standby w/ most replication bytes
 	most_repl_bytes=0
 
 	for pod_name in $pod_list; do
-		pod_ip=$(kubectl describe pod $pod_name | awk '/IP:/ {print $2}')
-		health_stats=$(kubectl exec $pod_name curl localhost/health)
+		health_stats=$(kubectl exec $pod_name -- curl -s localhost/health)
 		db_ok=$(echo $health_stats | jq -r ".database.ok")
 		if [[ "$db_ok" != "true" ]]; then
 			continue
@@ -76,12 +75,12 @@ identify_standby_to_promote() {
 		pod_repl_bytes=$(echo $health_stats | jq -r ".database.replication_status.pg_last_xlog_replay_location_bytes")
 		if [[ $pod_repl_bytes > $most_repl_bytes ]]; then
 			most_repl_bytes=$pod_repl_bytes
-			use_this_one=$pod_name
+			candidate=$pod_name
 		fi
 	done
 	# label winning pod as candidate
-	kubectl label --overwrite pod $use_this_one role=candidate
-	printf "pod %s will be the new master...\n" $use_this_one
+	kubectl label --overwrite pod $candidate role=candidate
+	printf "%s will be the new master...\n" $candidate
 }
 
 ##########################
@@ -91,12 +90,12 @@ identify_standby_to_promote() {
 #
 
 verify_master_candidate() {
-	printf "verifying candidate as viable master...\n"
+	printf "Verifying candidate as viable master...\n"
 	# get candidate pod IP address
-	candidate_pod=$(kubectl get pods -lrole=candidate --no-headers | awk '{print $1}')
+	candidate_pod=$(kubectl get pods -lrole=candidate -o jsonpath="{.items[*].metadata.name}")
 	candidate_ip=$(kubectl describe pod $candidate_pod | awk '/IP:/ { print $2 }')
-	# get list of pods that aren't master
-	pod_list=$(kubectl get pods -lrole=standby --no-headers | awk '{print $1}')
+	# get list of standby pods
+	pod_list=($(kubectl get pods -lrole=standby -o jsonpath="{.items[*].metadata.name}"))
 
 	for pod_name in $pod_list; do
 		# verify new master is worthy
@@ -111,12 +110,12 @@ verify_master_candidate() {
 # rebases all other standbys to candidate
 
 rebase_other_standbys() {
-	printf "rebasing other standbys to new master...\n"
+	printf "Rebasing other standbys to new master...\n"
 	# get candidate pod IP address
-	candidate_pod=$(kubectl get pods -lrole=candidate --no-headers | awk '{print $1}')
+	candidate_pod=$(kubectl get pods -lrole=candidate -o jsonpath="{.items[*].metadata.name}")
 	candidate_ip=$(kubectl describe pod $candidate_pod | awk '/IP:/ { print $2 }')
 	# get list of standby pods
-	pod_list=$(kubectl get pods -lrole=standby --no-headers | awk '{print $1}')
+	pod_list=($(kubectl get pods -lrole=standby -o jsonpath="{.items[*].metadata.name}"))
 
 	# rebase remaining standbys to new master
 	for pod_name in $pod_list; do
@@ -130,9 +129,9 @@ rebase_other_standbys() {
 # promotes selected pod to the role of master
 
 promote_candidate() {
-	printf "promoting candidate to master...\n"
+	printf "Promoting candidate to master...\n"
 	# get candidate pod IP address
-	candidate_pod=$(kubectl get pods -lrole=candidate --no-headers | awk '{print $1}')
+	candidate_pod=$(kubectl get pods -lrole=candidate -o jsonpath="{.items[*].metadata.name}")
 	# promote new master
 	kubectl exec -t $candidate_pod -- evoke role promote
 	# update label
@@ -145,12 +144,12 @@ promote_candidate() {
 # configure OLD_MASTER_POD to be a standby
 
 configure_new_standby() {
-	printf "configuring former master pod as standby...\n"
+	printf "Configuring former master pod as standby...\n"
 	# get master pod IP address
-	master_pod=$(kubectl get pods -lrole=master --no-headers | awk "{print \$1}")
+	master_pod=$(kubectl get pods -lrole=master -o jsonpath="{.items[*].metadata.name}")
 	master_ip=$(kubectl describe pod $master_pod | awk '/IP:/ { print $2 }')
 	# make sure replaced master pod is running
-	new_pod=$(kubectl get pod -lrole=unset --no-headers | awk "{print \$1}")
+	new_pod=$(kubectl get pod -lrole=unset -o jsonpath="{.items[*].metadata.name}")
 	while [[ $(kubectl get pod $new_pod --no-headers | awk "{print \$3}") != 'Running' ]]; do	
 		sleep 5
 	done
