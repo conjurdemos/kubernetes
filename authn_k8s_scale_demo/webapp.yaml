@@ -28,6 +28,8 @@ spec:
           value: dev
         - name: CONJUR_AUTHN_LOGIN
           value: webapp
+        - name: CONJUR_MAJOR_VERSION
+          value: "4"
         - name: CONJUR_SSL_CERTIFICATE
           valueFrom:
             configMapKeyRef:

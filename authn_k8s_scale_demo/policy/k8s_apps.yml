@@ -6,11 +6,11 @@
     annotations:
       description: Apps and services in Kubernetes "default" namespace.
     body:
-    - &hosts
+    - &authorized-hosts
       - !host webapp
 
     - !permit
-      resources: *hosts
+      resources: *authorized-hosts
       privilege: [ read, authenticate ]
       roles:
       - !host /conjur/authn-k8s/minikube/default/client

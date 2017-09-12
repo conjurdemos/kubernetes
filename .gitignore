@@ -7,5 +7,6 @@ conjur-service/conjur-follower.yaml
 conjur_server_build/*.deb
 scale_demo/conjur-dev.pem
 scale_demo/conjurrc
+summon-*.tar.gz
 tmp
 
