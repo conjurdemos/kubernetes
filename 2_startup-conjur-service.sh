@@ -135,7 +135,7 @@ startup_client() {
 	./deploy.sh
 	popd
 
-	kubectl config use-context minikube
+	kubectl config use-context conjur
 }
 
 print_config() {
