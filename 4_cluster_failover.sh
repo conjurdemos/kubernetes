@@ -33,6 +33,10 @@ main() {
 delete_current_master() {
 	printf "Deleting current master...\n"
 	OLD_MASTER_POD=$(kubectl get pod -l role=master -o jsonpath="{.items[*].metadata.name}")
+	if [[ "$OLD_MASTER_POD" = "" ]]; then
+		echo 'No active master!'
+		exit 1
+	fi
 	# replace old master w/ unconfigured pod
 	kubectl get pod $OLD_MASTER_POD -o yaml | kubectl replace --force -f -
 	kubectl label --overwrite pod $OLD_MASTER_POD role=unset
