@@ -26,7 +26,7 @@ metadata:
 metadata:
   name: conjur-master
   labels:
-    app: conjur-appliance
+    app: conjur-master
     role: master
 spec:
   containers:
