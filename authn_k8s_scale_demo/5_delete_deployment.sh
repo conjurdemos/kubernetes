@@ -2,4 +2,5 @@
 
 kubectl config use-context minikube
 
-kubectl delete -f webapp.yaml
+kubectl delete --ignore-not-found=true -f webapp.yaml
+kubectl delete --ignore-not-found=true configmap webapp
