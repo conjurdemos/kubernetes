@@ -21,9 +21,9 @@ spec:
         command: [ ./authenticator.rb ]
         env:
         - name: CONJUR_APPLIANCE_URL
-          value: https://conjur-follower/api
+          value: https://conjur-follower.conjur.svc.cluster.local/api
         - name: CONJUR_AUTHN_URL
-          value: https://conjur-follower/api/authn-k8s/minikube/default
+          value: https://conjur-follower.conjur.svc.cluster.local/api/authn-k8s/minikube/default
         - name: CONJUR_ACCOUNT
           value: dev
         - name: CONJUR_AUTHN_LOGIN
@@ -47,7 +47,7 @@ spec:
         command: [ ./webapp.rb ]
         env:
         - name: CONJUR_APPLIANCE_URL
-          value: https://conjur-follower/api
+          value: https://conjur-follower.conjur.svc.cluster.local/api
         - name: CONJUR_ACCOUNT
           value: dev
         - name: CONJUR_SSL_CERTIFICATE

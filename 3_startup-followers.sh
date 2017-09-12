@@ -6,6 +6,8 @@ set -o pipefail
 
 declare CONFIG_DIR=./conjur-service
 
+kubectl config use-context conjur
+
 main() {
 	pushd $CONFIG_DIR
 	cat template.conjur-follower.yaml | sed "s={{seedfile-dir}}=$PWD=g" > conjur-follower.yaml

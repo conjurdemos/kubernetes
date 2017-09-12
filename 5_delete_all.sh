@@ -1,11 +1,14 @@
 #!/bin/bash
 
-kubectl delete -f ./conjur-service
-kubectl delete -f ./authn_k8s_scale_demo/webapp.yaml
+declare CONJUR_NAMESPACE=conjur
+
+kubectl delete --ignore-not-found=true -f ./authn_k8s_scale_demo/webapp.yaml
 kubectl delete replicaset -lapp=webapp
-kubectl delete replicaset -lapp=conjur-master
-kubectl delete replicaset -lapp=conjur-follower
-kubectl delete pods -lapp=conjur-appliance
 kubectl delete pods -lapp=webapp
-kubectl delete pods haproxy-conjur-master
+
+kubectl delete pods --ignore-not-found=true conjur-cli
+kubectl delete --ignore-not-found=true configmap cli-conjur
+
+kubectl delete namespace $CONJUR_NAMESPACE
+
 rm ./conjur-service/*.tar
