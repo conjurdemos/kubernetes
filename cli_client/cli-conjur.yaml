@@ -9,10 +9,13 @@ spec:
   containers:
   - name: conjur-cli
     image: conjur-cli:local
-    volumeMounts:
-    - mountPath: /host-dir
-      name: host-dir
-  volumes:
-  - name: host-dir
-    hostPath:
-      path: /Users/josephhunt/Conjur/scalability-k8s
+    env:
+    - name: CONJUR_APPLIANCE_URL
+      value: https://conjur-master.conjur.svc.cluster.local/api
+    - name: CONJUR_ACCOUNT
+      value: dev
+    - name: CONJUR_SSL_CERTIFICATE
+      valueFrom:
+        configMapKeyRef:
+          name: cli-conjur
+          key: ssl_certificate

@@ -25,6 +25,7 @@ main() {
 	startup_conjur_service
 	configure_conjur_cluster
 	start_load_balancer
+	startup_client
 	print_config
 }
 
@@ -125,6 +126,16 @@ start_load_balancer() {
 	kubectl create -f $CONFIG_DIR/haproxy-conjur-master.yaml
 
 	sleep 5
+}
+
+startup_client() {
+	echo "Starting up the client Pod"
+
+	pushd cli_client
+	./deploy.sh
+	popd
+
+	kubectl config use-context minikube
 }
 
 print_config() {
