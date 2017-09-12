@@ -24,9 +24,13 @@ load_conjur_image() {
 #	docker pull registry2.itci.conjur.net/conjur-appliance:4.9-stable
 #	docker tag registry2.itci.conjur.net/conjur-appliance:4.9-stable conjur-appliance:4.9-stable
 
-# Option 2: To load the conjur appliance image from a local tarfile, 
+# Option 2: To load the conjur appliance image from a downloaded tarfile, 
 #  edit the line below with the path to the tarfile:
 	CONJUR_APPLIANCE_TAR=~/conjur-install-images/conjur-appliance-4.9.6.0.tar
+	if [[ "$CONJUR_APPLIANCE_TAR" == "" ]]; then
+		echo "Edit load_conjur_image() to point to point to set CONJUR_APPLIANCE_TARFILE w/ the path to your conjur-appliance tarfile."
+		exit
+	fi
 	docker load -i $CONJUR_APPLIANCE_TAR
 }
 
@@ -58,20 +62,19 @@ build_cli_client_image() {
 	popd
 }
 
-install_weavescope() {
-        # setup weave scope for visualization
-        weave_image=$(docker images | awk '/weave/ {print $1}')
-        if [[ "$weave_image" == "" ]]; then
-                sudo curl -L git.io/scope -o /usr/local/bin/scope
-                sudo chmod a+x /usr/local/bin/scope
-		scope launch
-        fi
-}
-
 build_demo_app_image() {
         pushd authn_k8s_scale_demo/build
         ./build.sh
         popd
+}
+
+install_weavescope() {
+        # setup weave scope for visualization
+        weave_image=$(docker images | awk '/weave/ {print $1}')
+        if [[ "$weave_image" == "" ]]; then
+                sudo curl -L git.io/scope -o /usr/local/bin/scope && chmod a+x /usr/local/bin/scope
+		scope launch
+        fi
 }
 
 main $@

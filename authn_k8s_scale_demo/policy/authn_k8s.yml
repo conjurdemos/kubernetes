@@ -1,5 +1,6 @@
 - !policy
   id: conjur/authn-k8s/minikube/default
+  owner: !group /toolchain_admin
   body:
   - !webservice
     annotations:

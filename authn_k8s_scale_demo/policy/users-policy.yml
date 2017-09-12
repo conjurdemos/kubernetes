@@ -1,0 +1,34 @@
+---
+# initializes users for scalability-k8s demo
+# ted - k8s admin
+# bob - devops admin
+# k8s and devops admin groups are members of the toolchain admin group
+# alice - db_admin
+# carol - developer
+
+- !group k8s_admin
+- !group devops
+- !group toolchain_admin
+- !grant
+  role: !group toolchain_admin
+  members:
+  - !group k8s_admin
+  - !group devops
+
+- !user ted
+- !grant
+  role: !group k8s_admin
+  member: !user ted
+
+- !user bob
+- !grant
+  role: !group devops 
+  member: !user bob
+
+- !user alice
+- !group db_admin
+- !grant
+  role: !group db_admin
+  member: !user alice
+
+- !user carol

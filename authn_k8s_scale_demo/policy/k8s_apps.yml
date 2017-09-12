@@ -1,5 +1,6 @@
 - !policy
   id: conjur/authn-k8s/minikube/default
+  owner: !group toolchain_admin
   body:
   - !policy
     id: apps
@@ -11,6 +12,12 @@
 
     - !permit
       resources: *hosts
+      privilege: [ read, authenticate ]
+      roles:
+      - !host /conjur/authn-k8s/minikube/default/client
+
+    - !permit
+      resources: !host webapp
       privilege: [ read, authenticate ]
       roles:
       - !host /conjur/authn-k8s/minikube/default/client

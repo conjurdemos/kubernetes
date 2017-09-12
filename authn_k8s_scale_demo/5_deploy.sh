@@ -1,4 +1,6 @@
 #!/bin/bash
+conjur authn logout
+conjur authn login
 
 source ./evokecmd.sh
 

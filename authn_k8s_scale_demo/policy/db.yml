@@ -1,5 +1,6 @@
 - !policy
   id: db
+  owner: !group db_admin
   body:
   - &variables
     - !variable password
