@@ -8,6 +8,7 @@
     body:
     - &authorized-hosts
       - !host webapp
+      - !host webapp-summon
 
     - !permit
       resources: *authorized-hosts

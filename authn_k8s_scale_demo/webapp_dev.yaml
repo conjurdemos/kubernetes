@@ -11,7 +11,7 @@ spec:
 
   containers:
   - name: webapp-authenticator
-    image: scalability_k8s:local
+    image: webapp:local
     command: [ sleep, infinity ]
     env:
     - name: CONJUR_APPLIANCE_URL

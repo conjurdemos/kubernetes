@@ -18,6 +18,8 @@ RUN tar xzf /tmp/summon-conjur-linux-amd64.tar.gz && mv summon-conjur /usr/local
 
 WORKDIR /
 
+COPY secrets.yml .
+COPY copy-summon.sh .
 COPY authenticator.rb .
 COPY webapp.rb .
-
+COPY webapp.sh .

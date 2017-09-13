@@ -5,6 +5,9 @@ require 'conjur-cli'
 require 'restclient'
 require 'json'
 
+# Configure Conjur connection.
+# Keep the access token fresh and available to the application container.
+
 Conjur.configuration.apply_cert_config!
 Conjur.log = $stderr
 filename = "/run/conjur/access-token"

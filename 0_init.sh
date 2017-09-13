@@ -19,7 +19,7 @@ startup_env() {
 
 create_namespace() {
   if kubectl get namespace | grep -w $CONJUR_NAMESPACE > /dev/null; then
-    echo "Conjur namespace '$CONJUR_NAMESPACE' exists. I won't create it."
+    echo "Namespace '$CONJUR_NAMESPACE' exists. I won't create it."
   else
     kubectl create namespace $CONJUR_NAMESPACE
   fi

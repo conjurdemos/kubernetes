@@ -4,4 +4,4 @@ if [[ "$(uname -s)" == "Linux" ]]; then
         DOCKER="sudo docker"
 fi
 
-$DOCKER build -t scalability_k8s:local .
+$DOCKER build -t webapp:local .
