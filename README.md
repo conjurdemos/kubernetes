@@ -1,21 +1,23 @@
-# scalability-k8s
+# Kubernetes
 
-Goal: The scalability-demo implemented in Kubernetes, with a full Conjur cluster of 1 Master, 2 Standbys (& Followers eventually).
+Demonstrates the use of Conjur in Kubernetes for machine identity and secrets delivery.
 
-Scenario: Spin up a bunch of minimal containers, each of which fetches a secret every few seconds in a continuous loop. Change the secret, deny access, failover to standby and watch effects.
+As a secondary objective, which may be refactored to a separate demo in the future, this repo shows a multi-node master cluster with failover. 
 
 Prerequisites:
-- [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
-- [Conjur CLI](https://github.com/cyberark/conjur-cli/releases)
-- Download [conjur-authn-k8s_0.2.0.0-91ac501_amd64.deb.zip](https://github.com/conjurdemos/scalability-k8s/files/1220010/conjur-authn-k8s_0.2.0.0-91ac501_amd64.deb.zip) to the directory "conjur_server_build" and unzip it.
+- [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/).
+- [Conjur CLI](https://github.com/cyberark/conjur-cli/releases) installed locally.
+- [conjur-authn-k8s_0.2.0.0-91ac501_amd64.deb.zip](https://github.com/conjurdemos/scalability-k8s/files/1220010/conjur-authn-k8s_0.2.0.0-91ac501_amd64.deb.zip). Download to the directory "conjur_server_build" and unzip it.
 
 # Cluster management
 
-- 1_build_all.sh - create `minikube` and build all the demo images.
-- 2_startup-conjur-service.sh - sets up master and 2 standbys using yaml files conjur-service directory. Deploys a `conjur-master` service which uses HAProxy.
-- 3_startup-followers.sh - creates and configures the `conjur-follower` as a Kubernetes Service.
-- 4_cluster_failover.sh - fails over to a standby pod and re-launches the master as a standby.
-- 5_delete_all.sh - deletes entire cluster.
+- 0_init.sh - Setup the docker environment and create the `conjur` Kubernetes namespace.
+- 1_build_all.sh - Build images used by the demo.
+- 2a_startup_solo_master.sh - Run a single `conjur-master` Pod.
+- 2b_startup_master_cluster.sh - Run a master and 2 standbys, plus a `conjur-master` service which uses HAProxy.
+- 3_startup-followers.sh - Create the `conjur-follower` Service.
+- 4_cluster_failover.sh - Fail over to a standby pod and re-build the master as a standby. This will not work in solo master mode.
+- 5_delete_all.sh - Deletes the entire cluster.
 - time_sync.sh - use as needed to sync vbox clock with host.
 
 # `authn-k8s` scale demo

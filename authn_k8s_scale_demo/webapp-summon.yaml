@@ -2,18 +2,29 @@
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: webapp
+  name: webapp-summon
 spec:
   replicas: 2
   template:
     metadata:
       labels:
-        app: webapp
+        app: webapp-summon
     spec:
       volumes:
         - name: conjur-access-token
           emptyDir:
             medium: Memory
+        - name: conjur-summon
+          emptyDir:
+            medium: Memory
+
+      initContainers:
+      - name: copy-summon
+        image: webapp:local
+        command: [ ./copy-summon.sh ]
+        volumeMounts:
+        - mountPath: /summon
+          name: conjur-summon
 
       containers:
       - name: webapp-authenticator
@@ -27,7 +38,7 @@ spec:
         - name: CONJUR_ACCOUNT
           value: dev
         - name: CONJUR_AUTHN_LOGIN
-          value: webapp
+          value: webapp-summon
         - name: CONJUR_SSL_CERTIFICATE
           valueFrom:
             configMapKeyRef:
@@ -42,12 +53,16 @@ spec:
         - mountPath: /run/conjur
           name: conjur-access-token
 
-      - name: webapp
+      - name: webapp-summon
         image: webapp:local
-        command: [ ./webapp.rb ]
+        command: [ /summon/summon, -p, /summon/summon-conjur, ./webapp.sh ]
         env:
         - name: CONJUR_APPLIANCE_URL
           value: https://conjur-follower.conjur.svc.cluster.local/api
+        - name: CONJUR_MAJOR_VERSION
+          value: "4"
+        - name: CONJUR_AUTHN_TOKEN_FILE
+          value: /run/conjur/access-token
         - name: CONJUR_ACCOUNT
           value: dev
         - name: CONJUR_SSL_CERTIFICATE
@@ -58,4 +73,5 @@ spec:
         volumeMounts:
         - mountPath: /run/conjur/
           name: conjur-access-token
-
+        - mountPath: /summon
+          name: conjur-summon

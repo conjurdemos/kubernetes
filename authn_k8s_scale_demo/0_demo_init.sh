@@ -1,5 +1,4 @@
 #!/bin/bash -e
-set -o pipefail
 
 kubectl config use-context minikube
 
@@ -13,3 +12,5 @@ cd build
 ./build.sh
 cd ..
 
+echo "Now, you should run the following command in your terminal:"
+echo "export CONJURRC=$CONJURRC"
