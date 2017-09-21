@@ -6,10 +6,28 @@
     annotations:
       kubernetes/namespace: default
 
-  - !host client
+  - !policy
+    id: ca
+    body:
+    - !variable
+      id: cert
+      annotations:
+        description: CA cert for Kubernetes Pods.
+
+    - !variable
+      id: key
+      annotations:
+        description: CA key for Kubernetes Pods.
+
+  - !group
+    id: clients
+    annotations:
+      description: > 
+        Members of this group can use the minikube/default authentication service.
+        This group typically has one member, which is a layer containing the enrolled 
+        applications. 
 
   - !permit
     resource: !webservice
-    privilege: [ read, execute ]
-    roles:
-      - !host client
+    privilege: [ read, authenticate ]
+    role: !group clients

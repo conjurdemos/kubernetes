@@ -16,7 +16,7 @@ spec:
             medium: Memory
 
       containers:
-      - name: webapp-authenticator
+      - name: authenticator
         image: webapp:local
         command: [ ./authenticator.rb ]
         env:
@@ -33,11 +33,6 @@ spec:
             configMapKeyRef:
               name: webapp
               key: ssl_certificate
-        - name: CONJUR_CLIENT_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: conjur-client-api-key
-              key: api-key
         volumeMounts:
         - mountPath: /run/conjur
           name: conjur-access-token

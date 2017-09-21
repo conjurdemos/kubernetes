@@ -4,13 +4,15 @@ kind: Pod
 metadata:
   name: webapp
 spec:
+  hostname: webapp-dev
+  subdomain: demo-kubernetes
   volumes:
     - name: conjur-access-token
       emptyDir:
         medium: Memory
 
   containers:
-  - name: webapp-authenticator
+  - name: authenticator
     image: webapp:local
     command: [ sleep, infinity ]
     env:
@@ -22,18 +24,11 @@ spec:
       value: dev
     - name: CONJUR_AUTHN_LOGIN
       value: webapp
-    - name: CONJUR_MAJOR_VERSION
-      value: "4"
     - name: CONJUR_SSL_CERTIFICATE
       valueFrom:
         configMapKeyRef:
           name: webapp
           key: ssl_certificate
-    - name: CONJUR_CLIENT_API_KEY
-      valueFrom:
-        secretKeyRef:
-          name: conjur-client-api-key
-          key: api-key
     volumeMounts:
     - mountPath: /run/conjur
       name: conjur-access-token

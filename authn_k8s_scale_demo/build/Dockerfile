@@ -1,10 +1,12 @@
 FROM ubuntu:16.04
 
-RUN apt-get update && apt-get install -y curl
+RUN apt-get update && apt-get install -y curl vim dnsutils
 
 RUN curl -o conjur.deb -L https://github.com/conjurinc/cli-ruby/releases/download/v5.4.0/conjur_5.4.0-1_amd64.deb \
   && dpkg -i conjur.deb \
   && rm conjur.deb
+
+RUN /opt/conjur/embedded/bin/gem install sinatra
 
 RUN mkdir -p /usr/local/lib/summon
 
