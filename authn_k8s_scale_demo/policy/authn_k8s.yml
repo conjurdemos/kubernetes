@@ -1,6 +1,6 @@
-# This will be owned by the Kubernetes cluster admin.
 - !policy
   id: conjur/authn-k8s/minikube/default
+  owner: !group /ops
   body:
   - !webservice
     annotations:

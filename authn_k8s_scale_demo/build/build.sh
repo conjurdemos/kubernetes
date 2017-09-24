@@ -1,7 +1,10 @@
-# sudo not required for mac, but is for linux
-DOCKER="docker"
-if [[ "$(uname -s)" == "Linux" ]]; then
-        DOCKER="sudo docker"
+#!/bin/bash -e
+
+if [[ ! -f summon-linux-amd64.tar.gz ]]; then
+	curl -LO https://github.com/cyberark/summon/releases/download/v0.6.5/summon-linux-amd64.tar.gz
+fi
+if [[ ! -f summon-conjur-linux-amd64.tar.gz ]]; then
+	curl -LO https://github.com/cyberark/summon-conjur/releases/download/v0.4.0/summon-conjur-linux-amd64.tar.gz
 fi
 
-$DOCKER build -t webapp:local .
+docker build -t webapp:local .

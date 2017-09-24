@@ -13,13 +13,16 @@ main() {
 ##############################
 # STEP 1 - startup environment
 startup_env() {
+  if [[ "$(minikube status | awk '/minikube:/ {print $2}')" == "Stopped" ]]; then
+     minikube start
+  fi  
   # use the minikube docker environment
   eval $(minikube docker-env)
 }
 
 create_namespace() {
   if kubectl get namespace | grep -w $CONJUR_NAMESPACE > /dev/null; then
-    echo "Namespace '$CONJUR_NAMESPACE' exists. I won't create it."
+    echo "Namespace '$CONJUR_NAMESPACE' exists. I wont create it."
   else
     kubectl create namespace $CONJUR_NAMESPACE
   fi
