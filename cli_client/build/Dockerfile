@@ -20,6 +20,7 @@ RUN add-apt-repository \
    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
    $(lsb_release -cs) \
    stable"
-RUN apt-get update && apt-get install -y docker-ce
+RUN curl -Lo summon.tar.gz https://github.com/cyberark/summon/releases/download/v0.6.5/summon-linux-amd64.tar.gz && tar xvf summon.tar.gz && mv summon /usr/local/bin
+
 # On container startup: wait forever for interrupt signal
 CMD exec /bin/bash -c "trap : TERM INT; sleep infinity & wait"

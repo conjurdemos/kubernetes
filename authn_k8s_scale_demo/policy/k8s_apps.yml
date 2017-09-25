@@ -15,3 +15,9 @@
       privilege: [ read, authenticate ]
       roles:
       - !host /conjur/authn-k8s/minikube/default/client
+
+    - !permit
+      resources: !host webapp
+      privilege: [ read, authenticate ]
+      roles:
+      - !host /conjur/authn-k8s/minikube/default/client

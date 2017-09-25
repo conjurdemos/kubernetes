@@ -152,11 +152,18 @@ configure_new_standby() {
 	# get master pod IP address
 	master_pod=$(kubectl get pods -lrole=master -o jsonpath="{.items[*].metadata.name}")
 	master_ip=$(kubectl describe pod $master_pod | awk '/IP:/ { print $2 }')
+
 	# make sure replaced master pod is running
 	new_pod=$(kubectl get pod -lrole=unset -o jsonpath="{.items[*].metadata.name}")
+
 	while [[ $(kubectl get pod $new_pod --no-headers | awk "{print \$3}") != 'Running' ]]; do	
 		sleep 5
 	done
+					# wait until replaced master pod database quiesces
+	health_stats=$(kubectl exec $new_pod curl localhost/health)
+	while [[ "$(echo $health_stats | jq -r ".database.ok"l" != "true" ]]; then
+		sleep 5
+	done)
 
 	# copy seed file, unpack and configure
  	kubectl cp ./$CONFIG_DIR/standby-seed.tar $new_pod:/tmp/standby-seed.tar

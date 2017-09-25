@@ -1,6 +1,5 @@
 #!/bin/bash -e
 set -o pipefail
-
 kubectl config use-context minikube
 
 eval $(minikube docker-env)

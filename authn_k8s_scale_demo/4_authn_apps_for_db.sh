@@ -6,6 +6,6 @@ conjur authn login
 password=$(openssl rand -hex 12)
 
 echo "Storing DB password : $password"
-
 conjur variable values add db/password $password
+
 conjur authn logout >> /dev/null

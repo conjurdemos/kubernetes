@@ -5,11 +5,11 @@ conjur authn login -u admin -p Cyberark1
 
 # create secadmin user, password is foo
 conjur bootstrap << END
-y
+yes
 secadmin
 foo
 foo
-y
+yes
 END
 
 # create demo users, passwords are foo
