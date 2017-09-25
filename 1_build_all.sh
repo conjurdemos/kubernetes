@@ -26,7 +26,7 @@ load_conjur_image() {
 
 # Option 2: To load the conjur appliance image from a downloaded tarfile, 
 #  edit the line below with the path to the tarfile:
-	CONJUR_APPLIANCE_TAR=~/conjur-install-images/conjur-appliance-4.9.6.0.tar
+	CONJUR_APPLIANCE_TAR=~/conjur-install-images/conjur-appliance-4.9.7.0.tar
 	if [[ "$CONJUR_APPLIANCE_TAR" == "" ]]; then
 		echo "Edit load_conjur_image() to point to point to set CONJUR_APPLIANCE_TARFILE w/ the path to your conjur-appliance tarfile."
 		exit

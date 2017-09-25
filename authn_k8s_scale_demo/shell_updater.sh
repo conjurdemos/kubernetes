@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash 
 set -o pipefail
 conjur authn logout
 conjur authn login
