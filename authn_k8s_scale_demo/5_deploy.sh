@@ -25,5 +25,5 @@ echo Environment token: $CLIENT_API_KEY
 kubectl delete --ignore-not-found=true secret conjur-client-api-key
 kubectl create secret generic conjur-client-api-key --from-literal "api-key=$CLIENT_API_KEY"
 
-kubectl create -f webapp.yaml
+#kubectl create -f webapp.yaml
 kubectl create -f webapp-summon.yaml

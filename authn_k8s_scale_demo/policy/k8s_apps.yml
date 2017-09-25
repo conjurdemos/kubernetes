@@ -9,6 +9,7 @@
     body:
     - &hosts
       - !host webapp
+      - !host webapp-summon
 
     - !permit
       resources: *hosts

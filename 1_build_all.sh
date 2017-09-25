@@ -72,7 +72,8 @@ install_weavescope() {
         # setup weave scope for visualization
         weave_image=$(docker images | awk '/weave/ {print $1}')
         if [[ "$weave_image" == "" ]]; then
-                sudo curl -L git.io/scope -o /usr/local/bin/scope && chmod a+x /usr/local/bin/scope
+                sudo curl -L git.io/scope -o /usr/local/bin/scope
+		chmod a+x /usr/local/bin/scope
 		scope launch
         fi
 }
